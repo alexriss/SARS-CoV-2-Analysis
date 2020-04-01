@@ -14,6 +14,11 @@ This is my first [vue.js](https://vuejs.org/) project, so it might not be done c
 
 [Live version](https://alexriss.github.io/SARS-CoV-2-Analysis/)
 
+## Obligator screenshot
+
+![screenshot](screenshot.png)
+
+
 ## Data source
 
 The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ.
