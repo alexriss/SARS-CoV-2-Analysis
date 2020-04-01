@@ -12,9 +12,9 @@ This is my first [vue.js](https://vuejs.org/) project, so it might not be done c
 
 ## OK, I am convinced, let me see it!
 
-[Live version](https://alexriss.github.io/SARS-CoV-2-Analysis/)
+Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-CoV-2-Analysis/)
 
-## Obligator screenshot
+## Obligatory screenshot
 
 ![screenshot](screenshot.png)
 
