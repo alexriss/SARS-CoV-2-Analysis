@@ -118,10 +118,7 @@
       <div class="info">
         <p>
           The relative changes in the confirmed cases can be related to a doubling rate, i.e.
-          <span>
-          <br />
-            a doubling rate of {{ }} for a daily increase of {{ }}
-          </span>
+          a doubling every 3 days for a daily increase of 26%.
         </p>
 
         <br />
@@ -159,8 +156,19 @@
     var minCasesList = [0,100,500,1000,2000,5000];
     var minCasesActive = 3; // index
 
-    var csvC = readTextFile("time_series_covid19_confirmed_global.csv");
-    var csvD = readTextFile("time_series_covid19_deaths_global.csv");
+    var csvConfirmed = "time_series_covid19_confirmed_global.csv";
+    var csvDeceased = "time_series_covid19_deaths_global.csv";
+    var githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
+
+    var urlPre = "";
+    if (window.location.href.indexOf("github.io") >= 0) {
+      urlPre = githubJH;
+    }
+
+    console.log("loading "+ urlPre + csvConfirmed);
+    var csvC = readTextFile(urlPre + csvConfirmed);
+    console.log("loading "+ urlPre + csvDeceased);
+    var csvD = readTextFile(urlPre + csvDeceased);
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
@@ -289,9 +297,6 @@
 
     var debug = [];
     var error = [];
-
-    //debug.push(csvC);
-    //debug.push(csvD);
 
     var arrC = csvC.split("\n");
     var arrD = csvD.split("\n");
