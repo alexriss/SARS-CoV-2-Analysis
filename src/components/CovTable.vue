@@ -12,8 +12,8 @@
             </b-slider>
             </b-field> 
             </div>
-            <div style='position:absolute; top:20px; right:20px;'>
-                <span style="minor blue">data from {{ latest }} </span>
+            <div style='position:absolute; top:10px; right:10px;'>
+                <span class="minor blue" style="opacity:0.23;">data from {{ latest }} </span>
             </div>
         </b-field>
         <b-table
@@ -79,7 +79,7 @@
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest" label="CFR" numeric sortable header-class='redhead' cell-class='redcell' >
+                <b-table-column field="deceasedrelativelatest" label="CFR*" numeric sortable header-class='redhead' cell-class='redcell' >
                     {{ props.row.deceasedrelative[latest] | numeral('0.0%')}}
                     <span class="minor">
                     <br />3d avg: +{{ props.row.deceasedrelativelatest3 | numeral('0.0%')}}
@@ -87,7 +87,7 @@
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest8" :label="'CFR over ' + daysCFR + ' days'" numeric sortable centered header-class='redhead' cell-class='redcell' >
+                <b-table-column field="deceasedrelativelatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='redhead' cell-class='redcell' >
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
                     <sparkline :chartData='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
                   </div>
@@ -119,6 +119,10 @@
         <p>
           The relative changes in the confirmed cases can be related to a doubling rate, i.e.
           a doubling every 3 days for a daily increase of 26%.
+        </p>
+
+        <p>
+          <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
         </p>
 
         <br />
