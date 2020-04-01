@@ -28,6 +28,7 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 ## Todo
 
 * charts for each country
-* add horizontal gridlines at certain positions for doublings
+* improve mobile experience
+* add horizontal gridlines at positions indicating 3-day, 5-day, 19-day doublings
 * improve tooltip position for sparklines, probably static position will be best
 * calculate the CFR based on confirmed cases n days ago (controlled via slider)
