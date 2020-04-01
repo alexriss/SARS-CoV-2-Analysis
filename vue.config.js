@@ -1,5 +1,5 @@
 module.exports = {
     publicPath: process.env.NODE_ENV === 'production'
-        ? '/' + process.env.CI_PROJECT_NAME + '/'
+        ? '/SARS-CoV-2-Analysis/'
         : '/'
 }

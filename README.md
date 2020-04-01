@@ -10,6 +10,10 @@ as well as relative CFR ratios (very crudly approximated by a simple division of
 I haven't seen calculations and simple visualizations of the relative numbers. That is why I did this quick weekend project.
 This is my first [vue.js](https://vuejs.org/) project, so it might not be done completely optimally.
 
+## OK, I am convinced, let me see it!
+
+[Live version](https://alexriss.github.io/SARS-CoV-2-Analysis/)
+
 ## Data source
 
 The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ.
