@@ -508,12 +508,11 @@
 <style scoped>
 .redcell { background-color: rgba(200,0,0,0.3); }
 .redhead { background-color: rgba(200,0,0,0.4); }
-.minor { opacity:65%;font-size:small; }
+.minor { opacity:0.65;font-size:small; }
 .blue { color: blue; }
 .red { color:red; }
 
 .info {
    text-align:left;
-
 }
 </style>
