@@ -1,6 +1,6 @@
 <template>
     <section class="section">
-        <b-field grouped group-multiline>
+        <b-field grouped>
             <div class="control is-flex">
             <b-field label="Show countries with a minimum number of confirmed cases">
             <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData(minCasesActive)'>
@@ -11,6 +11,10 @@
                 >{{ item }}</b-slider-tick>
             </b-slider>
             </b-field> 
+            </div>
+            <div style="width:70px;"></div>
+            <div class="field">
+                <b-checkbox v-model="showdetails">show details</b-checkbox>
             </div>
             <div style='position:absolute; top:10px; right:10px;'>
                 <span class="minor blue" style="opacity:0.23;">data from {{ latest }} </span>
@@ -53,7 +57,7 @@
 
                 <b-table-column field="caseschangelatest" label="Change" numeric sortable>
                     <strong>+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
-                    <span class="minor">
+                    <span class="minor" v-if="showdetails">
                     <br />3d avg: +{{ props.row.caseschangelatest3 | numeral('0.0%')}}
                     <br />8d avg: +{{ props.row.caseschangelatest8 | numeral('0.0%')}}
                     </span>
@@ -73,7 +77,7 @@
 
                 <b-table-column field="deathschangelatest" label="Change " numeric sortable header-class='redhead' cell-class='redcell' >
                     +{{ props.row.deathschange[latest] | numeral('0.0%')}}
-                    <span class="minor">
+                    <span class="minor" v-if="showdetails">
                     <br />3d avg: +{{ props.row.deathschangelatest3 | numeral('0.0%')}}
                     <br />8d avg: +{{ props.row.deathschangelatest8 | numeral('0.0%')}}
                     </span>
@@ -81,7 +85,7 @@
 
                 <b-table-column field="deceasedrelativelatest" label="CFR*" numeric sortable header-class='orangehead' cell-class='orangecell' >
                     {{ props.row.deceasedrelative[latest] | numeral('0.0%')}}
-                    <span class="minor">
+                    <span class="minor" v-if="showdetails">
                     <br />3d avg: {{ props.row.deceasedrelativelatest3 | numeral('0.0%')}}
                     <br />8d avg: {{ props.row.deceasedrelativelatest8| numeral('0.0%')}}
                     </span>
@@ -406,6 +410,7 @@
                 debug,
                 error,
                 latest,
+                showdetails: false,
                 daysRelChange,
                 daysCFR,
                 sparklinestyles: {
