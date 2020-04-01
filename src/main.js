@@ -11,9 +11,6 @@ Vue.use(Buefy, {
 import vueNumeralFilterInstaller from 'vue-numeral-filter';
 Vue.use(vueNumeralFilterInstaller, { locale: 'de' });
 
-import { Laue } from 'laue';
-Vue.use(Laue);
-
 Vue.config.productionTip = true
 
 new Vue({

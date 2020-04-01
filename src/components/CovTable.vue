@@ -23,7 +23,7 @@
             paginated
             per-page="30"
             pagination-position="both"
-            detailed
+            :detailed="false"
             narrowed
             hoverable
             detail-key="country"
@@ -60,25 +60,9 @@
                 </b-table-column>
                 
                 <b-table-column field="caseschangelatest8" :label="'Relative change over ' + daysRelChange + ' days'" numeric sortable centered>
-                  <la-cartesian :width="200" :height="60" autoresize :data="props.row.sparklines"  :bound="[0,0.3]" style="margin:auto;">
-                    <la-area prop="cc" label='change'></la-area>
-                    <la-line prop="value3day" label='3 day doubling' dashed color='#f0a0a0' :tooltip="false"></la-line>
-                    <la-line prop="value6day" label='6 day doubling' dashed color='#f0b0b0'></la-line>
-                    <la-line prop="value12day" label='12 day doubling' dashed color='#f0c0c0'></la-line>
-                    <la-tooltip>
-                            <div class="tooltip" slot-scope="propstooltip">
-                            <div 
-                               v-for="item in propstooltip.actived"
-                               :key="item.label">
-                            <ul class="list" v-if='item.label=="change"'>
-                              <li :style="{ borderTop: '3px solid ' + item.color }">
-                                <div class="value">{{ item.value | numeral('0.0%') }}</div>
-                              </li>
-                            </ul>
-                            </div>
-                          </div>
-                    </la-tooltip>
-                  </la-cartesian>
+                  <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
+                    <sparkline :chartData='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
+                  </div>
                 </b-table-column>
 
                 <b-table-column field="deathslatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
@@ -104,23 +88,10 @@
                 </b-table-column>
 
                 <b-table-column field="deceasedrelativelatest8" :label="'CFR over ' + daysCFR + ' days'" numeric sortable centered header-class='redhead' cell-class='redcell' >
-                  <la-cartesian :width="200" :height="60" autoresize :data="props.row.sparklinescfr"  :bound="[0,0.10]" style="margin:auto;">
-                    <la-area prop="cfr" label="CFR" color='#a01010'></la-area>
-                    <la-x-axis prop="name"></la-x-axis>
-                    <la-tooltip>
-                          <div class="tooltip" slot-scope="propstooltip">
-                                                          {{ props.label }}
-                            <ul class="list">
-                              <li
-                                :key="item.label"
-                                v-for="item in propstooltip.actived"
-                                :style="{ borderTop: '2px solid ' + item.color }">
-                                <div class="value">  s {{ item.value | numeral('0.0%') }}</div>
-                              </li>
-                            </ul>
-                          </div>
-                    </la-tooltip>
-                  </la-cartesian>
+                  <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
+                    <sparkline :chartData='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
+                  </div>
+
                 </b-table-column>
             </template>
 
@@ -143,6 +114,24 @@
                 </article>
             </template>
         </b-table>
+
+      <div class="info">
+        <p>
+          The relative changes in the confirmed cases can be related to a doubling rate, i.e.
+          <span>
+          <br />
+            a doubling rate of {{ }} for a daily increase of {{ }}
+          </span>
+        </p>
+
+        <br />
+        <p class="minor">
+        Data Source: <a href="https://github.com/CSSEGISandData/COVID-19" target="_blank">Johns Hopkins University</a>
+        <br />
+        Data included until: {{ latest }}
+        </p>
+        <br />
+      </div>
 
       <div style='color:red;font-weight:bold;'>
         <div v-for="(item, index) in error" :key="index">
@@ -172,6 +161,9 @@
 
     var csvC = readTextFile("time_series_covid19_confirmed_global.csv");
     var csvD = readTextFile("time_series_covid19_deaths_global.csv");
+
+    import numeral from 'numeral'
+    import Sparkline from '@/components/Sparkline.vue'
 
     // read csv files
     function readTextFile(file)
@@ -252,24 +244,32 @@
         }
       });
 
-      var sparklines = [];
+      var sparklinesdataentries = [];
       for (i=dates.length-1-daysRelChange; i<dates.length; i++) {  // 7 days of sparklines
-        sparklines.push(
-          {name: dates[i], cc: caseschange[dates[i]],
-          'value3day': Math.pow(2,1/3)-1,
-          'value6day': Math.pow(2,1/6)-1,
-          'value12day': Math.pow(2,1/12)-1,
-          'value24day': Math.pow(2,1/24)-1,
-        });
+        sparklinesdataentries.push(caseschange[dates[i]])
+      }
+      var sparklinesdata = {
+        labels: dates.slice(dates.length-1-daysRelChange),
+        datasets: [
+          {
+            label: country,
+            data: sparklinesdataentries
+          }
+        ]
       }
 
-      var sparklinescfr = [];
+      var sparklinescfrdataentries = [];
       for (i=dates.length-1-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
-        sparklinescfr.push(
-          {name: dates[i], cfr: deceasedrelative[dates[i]]});
+        sparklinescfrdataentries.push(deceasedrelative[dates[i]]);
       }
-      if (country=="Germany") {
-      debug.push(sparklinescfr);
+      var sparklinescfrdata = {
+        labels: dates.slice(dates.length-1-daysCFR),
+        datasets: [
+          {
+            label: country,
+            data: sparklinescfrdataentries
+          }
+        ]
       }
 
       return {
@@ -283,7 +283,7 @@
         'deceasedrelative': deceasedrelative, 'deceasedrelativelatest': deceasedrelative[latest], 
         'deceasedrelativelatest3': geomean(deceasedrelative, 3),
         'deceasedrelativelatest8': geomean(deceasedrelative, 8), 
-        'sparklines': sparklines, 'sparklinescfr': sparklinescfr
+        'sparklinesdata': sparklinesdata, 'sparklinescfrdata': sparklinescfrdata
       }
     }
 
@@ -312,11 +312,6 @@
     var datesStr = headerD.slice(4);
     var dates = Array.from(datesStr, x => stringToDate(x));
     var latest = dates[dates.length - 1];
-
-    debug.push(datesStr);
-    debug.push(datesStr.length);
-    debug.push(dates);
-    debug.push(dates.length);
 
     var data = [];
     var dataFiltered = [];
@@ -347,14 +342,6 @@
         continue;
       }
       country = elsC[1];
-
-      if (country == 'Germany..')  {
-        debug.push(makerow(country, cases, deaths));
-        var r = makerow(country, cases, deaths);
-        var caseschange = r['caseschange'];
-        debug.push(caseschange[latest]);
-        debug.push(caseschange['2020-03-25']);
-      }
 
       if (country != currCountry) {
         if (currCountry != '') {
@@ -391,6 +378,9 @@
     }
 
     export default {
+        components: {
+          Sparkline,
+        },
         data() {
             return {
                 data,
@@ -404,6 +394,77 @@
                 latest,
                 daysRelChange,
                 daysCFR,
+                sparklinestyles: {
+                  height: '65px',
+                  width: '100%',
+                  position: 'relative',
+                },
+                sparklineoptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    elements: {
+                      point: { radius: 1 },
+                      line: { 
+                        tension: 0,
+                        backgroundColor: '#3179bd',
+                        borderColor: '#3179bd',
+                        fill: true,
+                      }
+                    },
+                    tooltips: {
+                      enabled: true,
+                      mode: 'x-axis',
+                      callbacks: {
+                          label: function(tooltipItem) { return numeral(tooltipItem.yLabel).format('0.0%'); }
+                      }
+                    },
+                    scales: {
+                      yAxes: [{
+                          display: false,
+                          ticks: {
+                            min: 0, max: 0.35,
+                            callback: function (value) { return numeral(value).format('0,0%') }
+                          }
+                      }],
+                      xAxes: [{
+                          display: false
+                      }]
+                    }
+                },
+                sparklinecfroptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    elements: {
+                      point: { radius: 1 },
+                      line: { 
+                        tension: 0,
+                        backgroundColor: '#bd3131',
+                        borderColor: '#bd3131',
+                        fill: true,
+                      }
+                    },
+                    tooltips: {
+                      enabled: true,
+                      mode: 'x-axis',
+                      callbacks: {
+                          label: function(tooltipItem) { return numeral(tooltipItem.yLabel).format('0.0%'); }
+                      }
+                    },
+                    scales: {
+                      yAxes: [{
+                          display: false,
+                          ticks: {
+                            min: 0, max: 0.10,
+                            callback: function (value) { return numeral(value).format('0,0%') }
+                          }
+                      }],
+                      xAxes: [{
+                          display: false
+                      }]
+                    }
+                }
             }
         },
         methods: {
@@ -445,41 +506,9 @@
 .minor { opacity:65%;font-size:small; }
 .blue { color: blue; }
 .red { color:red; }
-  
-.tooltip {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 4px;
-}
 
-.title {
-  padding: 10px;
-  color: #959da5;
-}
+.info {
+   text-align:left;
 
-.list {
-  list-style: none;
-  display: flex;
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.list li {
-  padding: 1px 3px;
-  flex: 1;
-  color: #fff;
-  margin: 0;
-  min-width: 30px;
-}
-
-.list li::before {
-  content: none;
-}
-
-.label {
-  color: #dfe2e5;
-  font-weight: 600;
-}
-
-.value {
-  color: #959da5;
 }
 </style>
