@@ -5,7 +5,7 @@
 A quick analysis of coronavirus figures, in particular relative increases in confirmed changes, trendlines,
 as well as relative CFR ratios (very crudly approximated by a simple division of confirmed cases by deceased cases).
 
-## Why anpther one?
+## Why another one?
 
 I haven't seen calculations and simple visualizations of the relative numbers. That is why I did this quick weekend project.
 This is my first [vue.js](https://vuejs.org/) project, so it might not be done completely optimally.
