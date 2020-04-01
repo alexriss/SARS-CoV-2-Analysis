@@ -46,13 +46,13 @@
                 </b-table-column>
 
                 <b-table-column field="caseslatest" label="Confirmed" numeric sortable>
-                    {{ props.row.cases[latest] }}
+                    <strong>{{ props.row.cases[latest] }}</strong>
                     <br />
                     <span class="minor"> +{{ props.row.casesdifference[latest] }} </span>
                 </b-table-column>
 
                 <b-table-column field="caseschangelatest" label="Change" numeric sortable>
-                    +{{ props.row.caseschange[latest] | numeral('0.0%')}}
+                    <strong>+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
                     <span class="minor">
                     <br />3d avg: +{{ props.row.caseschangelatest3 | numeral('0.0%')}}
                     <br />8d avg: +{{ props.row.caseschangelatest8 | numeral('0.0%')}}
@@ -66,9 +66,9 @@
                 </b-table-column>
 
                 <b-table-column field="deathslatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
-                    {{ props.row.deaths[latest] }}
+                    <strong>{{ props.row.deaths[latest] }}</strong>
                     <br />
-                    <span class="minor red"> +{{ props.row.deathsdifference[latest] }} </span>
+                    <span class="minor red" style="opacity:0.9;"> +{{ props.row.deathsdifference[latest] }} </span>
                 </b-table-column>
 
                 <b-table-column field="deathschangelatest" label="Change " numeric sortable header-class='redhead' cell-class='redcell' >
@@ -79,15 +79,15 @@
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest" label="CFR*" numeric sortable header-class='redhead' cell-class='redcell' >
+                <b-table-column field="deceasedrelativelatest" label="CFR*" numeric sortable header-class='orangehead' cell-class='orangecell' >
                     {{ props.row.deceasedrelative[latest] | numeral('0.0%')}}
                     <span class="minor">
-                    <br />3d avg: +{{ props.row.deceasedrelativelatest3 | numeral('0.0%')}}
-                    <br />8d avg: +{{ props.row.deceasedrelativelatest8| numeral('0.0%')}}
+                    <br />3d avg: {{ props.row.deceasedrelativelatest3 | numeral('0.0%')}}
+                    <br />8d avg: {{ props.row.deceasedrelativelatest8| numeral('0.0%')}}
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='redhead' cell-class='redcell' >
+                <b-table-column field="deceasedrelativelatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
                     <sparkline :chartData='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
                   </div>
@@ -116,15 +116,20 @@
         </b-table>
 
       <div class="info">
-        <p>
-          The relative changes in the confirmed cases can be related to a doubling rate, i.e.
-          a doubling every 3 days for a daily increase of 26%.
-        </p>
-
-        <p>
-          <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
-        </p>
-
+        Some notes:
+        <ul>
+          <li>
+            - The relative changes in the confirmed cases can be related to a doubling rate, i.e.
+            a doubling every 3 days for a daily increase of 26%.
+          </li>
+          <li>
+            - <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
+          </li>
+          <li>
+            - The averages given over n number of days are computeed as geometric averages.
+          </li>
+        </ul>
+        
         <br />
         <p class="minor">
         Data Source: <a href="https://github.com/CSSEGISandData/COVID-19" target="_blank">Johns Hopkins University</a>
@@ -449,8 +454,8 @@
                       point: { radius: 1 },
                       line: { 
                         tension: 0,
-                        backgroundColor: '#bd3131',
-                        borderColor: '#bd3131',
+                        backgroundColor: '#9d3131',
+                        borderColor: '#9d3131',
                         fill: true,
                       }
                     },
@@ -510,8 +515,10 @@
 
 
 <style scoped>
-.redcell { background-color: rgba(200,0,0,0.3); }
-.redhead { background-color: rgba(200,0,0,0.4); }
+.redcell { background-color: rgba(200,30,60,0.3); }
+.redhead { background-color: rgba(200,30,60,0.4); }
+.orangecell { background-color: rgba(250,150,200,0.3); }
+.orangehead { background-color: rgba(250,150,200,0.4); }
 .minor { opacity:0.65;font-size:small; }
 .blue { color: blue; }
 .red { color:red; }
