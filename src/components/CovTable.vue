@@ -16,9 +16,12 @@
             <div class="field">
                 <b-checkbox v-model="showdetails">show details</b-checkbox>
             </div>
-            <div style='position:absolute; top:10px; right:10px;'>
+
+            <!--
+            <div style='position:absolute; top:10px; left:10px;'>
                 <span class="minor blue" style="opacity:0.23;">data from {{ latest }} </span>
             </div>
+            -->
         </b-field>
         <b-table
             :data="dataFiltered"
@@ -29,6 +32,8 @@
             pagination-position="both"
             :detailed="false"
             narrowed
+            is-narrow
+            :mobile-cards="false"
             hoverable
             detail-key="country"
             sort-icon="chevron-up"
@@ -40,7 +45,8 @@
             aria-next-label="Next page"
             aria-previous-label="Previous page"
             aria-page-label="Page"
-            aria-current-label="Current page">
+            aria-current-label="Current page"
+            style="min-width:600px;">
 
             <template slot-scope="props">
                 <b-table-column field="country" label="Country" sortable searchable>
@@ -131,6 +137,9 @@
           </li>
           <li>
             - The averages given over n number of days are computeed as geometric averages.
+          </li>
+          <li>
+            - The source code and further information can be found on the respective <a href="https://github.com/alexriss/SARS-CoV-2-Analysis"><i class="fab fa-github"></i> github page</a>.
           </li>
         </ul>
         

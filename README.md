@@ -7,7 +7,7 @@ as well as relative CFR ratios (very crudly approximated by a simple division of
 
 ## Why another one?
 
-We need relative numbers! All countries have different testing capacities and often also different rules as what counts as confirmed case or coronavirus-related fatality. Thus, relative ration and relative increases in numbers can be more informative.
+<strong>We need relative numbers!</strong> All countries have different testing capacities and often also different rules as what counts as confirmed case or coronavirus-related fatality. Thus, relative ration and relative increases in numbers can be more informative.
 
 I haven't seen calculations and simple visualizations of relative numbers. That is why I did this quick weekend project.
 This is my first [vue.js](https://vuejs.org/) project, so it might not be done completely optimally.
@@ -19,6 +19,10 @@ Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-Co
 ## Obligatory screenshot
 
 ![screenshot](screenshot.png)
+
+## Is it beta?
+
+Of course! Probably even alpha. It is a weekend project and I just work on this in my free time. Please double check all numbers and graphs.
 
 
 ## Data source
