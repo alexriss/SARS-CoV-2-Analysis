@@ -317,6 +317,79 @@
       }
     }
 
+    // custom tooltips for graphs
+    var customTooltips = function(tooltip) {
+			// Tooltip Element
+			var tooltipEl = document.getElementById('chartjs-tooltip');
+
+			if (!tooltipEl) {
+				tooltipEl = document.createElement('div');
+				tooltipEl.id = 'chartjs-tooltip';
+				tooltipEl.innerHTML = '<table></table>';
+				this._chart.canvas.parentNode.appendChild(tooltipEl);
+			}
+
+			// Hide if no tooltip
+			if (tooltip.opacity === 0) {
+				tooltipEl.style.opacity = 0;
+				return;
+			}
+
+			// Set caret Position
+			tooltipEl.classList.remove('above', 'below', 'no-transform');
+			if (tooltip.yAlign) {
+				tooltipEl.classList.add(tooltip.yAlign);
+			} else {
+				tooltipEl.classList.add('no-transform');
+			}
+
+			function getBody(bodyItem) {
+				return bodyItem.lines;
+			}
+
+			// Set Text
+			if (tooltip.body) {
+				var titleLines = tooltip.title || [];
+				var bodyLines = tooltip.body.map(getBody);
+
+				var innerHtml = '<thead>';
+
+				titleLines.forEach(function(title) {
+					innerHtml += '<tr><th>' + title + '</th></tr>';
+				});
+				innerHtml += '</thead><tbody>';
+
+				bodyLines.forEach(function(body, i) {
+          var span = '';
+          if (tooltip.displayColors) {
+            var colors = tooltip.labelColors[i];
+            var style = 'background:' + colors.backgroundColor;
+            style += '; border-color:' + colors.borderColor;
+            style += '; border-width: 2px';
+            span = '<span class="chartjs-tooltip-key" style="' + style + '"></span>';
+          }
+					innerHtml += '<tr><td>' + span + body + '</td></tr>';
+				});
+				innerHtml += '</tbody>';
+
+				var tableRoot = tooltipEl.querySelector('table');
+				tableRoot.innerHTML = innerHtml;
+			}
+
+			var positionY = this._chart.canvas.offsetTop;
+			var positionX = this._chart.canvas.offsetLeft;
+
+			// Display, position, and set styles for font
+			tooltipEl.style.opacity = 1;
+			tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+			tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+			tooltipEl.style.fontFamily = tooltip._bodyFontFamily;
+			tooltipEl.style.fontSize = tooltip.bodyFontSize + 'px';
+			tooltipEl.style.fontStyle = tooltip._bodyFontStyle;
+			tooltipEl.style.padding = tooltip.yPadding + 'px ' + tooltip.xPadding + 'px';
+    };
+    
+
     var debug = [];
     var error = [];
 
@@ -441,10 +514,18 @@
                       }
                     },
                     tooltips: {
-                      enabled: true,
+                      enabled: false,
                       mode: 'x-axis',
+                      position: 'nearest',
+                      displayColors: false,
+                      custom: customTooltips,
+                      xPadding: 0,
+                      yPadding: 0,
                       callbacks: {
-                          label: function(tooltipItem) { return numeral(tooltipItem.yLabel).format('0.0%'); }
+                        label: function(tooltipItem) {
+                          var doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
+                          return numeral(tooltipItem.yLabel).format('0.0%') + ' <minor><i style="opacity:0.4;">' + numeral(doubling).format('0.0') + 'd </i></minor>';
+                        }
                       }
                     },
                     scales: {
@@ -476,6 +557,7 @@
                     tooltips: {
                       enabled: true,
                       mode: 'x-axis',
+                      displayColors: false,
                       callbacks: {
                           label: function(tooltipItem) { return numeral(tooltipItem.yLabel).format('0.0%'); }
                       }
@@ -539,5 +621,40 @@
 
 .info {
    text-align:left;
+}
+</style>
+
+<style>
+/* chart.js tooltips, doesnt work when scoped */
+canvas{
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+#chartjs-tooltip {
+  opacity: 1;
+  position: absolute;
+  background: rgba(0, 0, 0, .7);
+  color: white;
+  border-radius: 3px;
+  -webkit-transition: all .1s ease;
+  transition: all .1s ease;
+  pointer-events: none;
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+  line-height:1.2em;
+  border-collapse: collapse;
+}
+
+#chartjs-tooltip thead th {
+  color:white;
+  line-height:1.2em;
+}
+
+.chartjs-tooltip-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
 }
 </style>
