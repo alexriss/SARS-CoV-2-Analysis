@@ -16,7 +16,6 @@
             <div class="field">
                 <b-checkbox v-model="showdetails">show details</b-checkbox>
             </div>
-
             <!--
             <div style='position:absolute; top:10px; left:10px;'>
                 <span class="minor blue" style="opacity:0.23;">data from {{ latest }} </span>
@@ -30,7 +29,7 @@
             paginated
             per-page="30"
             pagination-position="both"
-            :detailed="false"
+            :detailed="true"
             narrowed
             is-narrow
             :mobile-cards="false"
@@ -38,7 +37,7 @@
             detail-key="country"
             sort-icon="chevron-up"
             sort-icon-size="is-small"
-            :show-detail-icon="false"
+            :show-detail-icon="true"
             default-sort="caseslatest"
             default-sort-direction='desc'
 
@@ -49,7 +48,7 @@
             style="min-width:600px;">
 
             <template slot-scope="props">
-                <b-table-column field="country" label="Country" sortable searchable>
+                <b-table-column field="country" label="Country" sortable searchable cell-class='countrycell'>
                     <a @click="toggle(props.row)">
                         <strong>{{ props.row.country }}</strong>
                     </a>
@@ -61,7 +60,7 @@
                     <span class="minor"> +{{ props.row.casesdifference[latest] }} </span>
                 </b-table-column>
 
-                <b-table-column field="caseschangelatest" label="Change" numeric sortable>
+                <b-table-column field="caseschangelatest" label="Increase" numeric sortable>
                     <strong>+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
                     <span class="minor" v-if="showdetails">
                     <br />3d avg: +{{ props.row.caseschangelatest3 | numeral('0.0%')}}
@@ -69,9 +68,9 @@
                     </span>
                 </b-table-column>
                 
-                <b-table-column field="caseschangelatest8" :label="'Relative change over ' + daysRelChange + ' days'" numeric sortable centered>
+                <b-table-column field="caseschangelatest8" :label="'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chartData='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
+                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
                   </div>
                 </b-table-column>
 
@@ -81,7 +80,7 @@
                     <span class="minor red" style="opacity:0.9;"> +{{ props.row.deathsdifference[latest] }} </span>
                 </b-table-column>
 
-                <b-table-column field="deathschangelatest" label="Change " numeric sortable header-class='redhead' cell-class='redcell' >
+                <b-table-column field="deathschangelatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
                     +{{ props.row.deathschange[latest] | numeral('0.0%')}}
                     <span class="minor" v-if="showdetails">
                     <br />3d avg: +{{ props.row.deathschangelatest3 | numeral('0.0%')}}
@@ -99,7 +98,7 @@
 
                 <b-table-column field="deceasedrelativelatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chartData='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
+                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
                   </div>
 
                 </b-table-column>
@@ -109,16 +108,9 @@
                 <article class="media">
                     <div class="media-content">
                         <div class="content">
-                            <p>
-                                <strong>{{ props.row.country }}</strong>
-                                <br />
-                                <br />
-                                More to come.
-                                <br />
-                                <br />
-                                <small> {{ props.row.cases }}</small>
-                                <br />
-                            </p>
+                            <cov-detail :chart-data="props.row" />
+                            <br />
+                            <!-- <small> {{ props.row.cases }}</small> -->
                         </div>
                     </div>
                 </article>
@@ -200,6 +192,7 @@
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
+    import CovDetail from '@/components/CovDetail.vue'
 
     // read csv files
     function readTextFile(file)
@@ -260,9 +253,6 @@
         } else {
           caseschange[dates[i+1]] = 0;
         }
-        if (country == "Germany..") {
-          debug.push(deaths[dates[i]]);
-        }
         if (deaths[dates[i]] > 0) {
           deathschange[dates[i+1]] = deaths[dates[i+1]] / deaths[dates[i]] - 1;
         } else {
@@ -309,7 +299,7 @@
       }
 
       return {
-        'country': country, 'cases': cases, 'deaths': deaths,
+        'dates': dates, 'country': country, 'cases': cases, 'deaths': deaths,
         'caseslatest': cases[latest], 'deathslatest': deaths[latest],
         'caseschange': caseschange, 'deathschange': deathschange,
         'casesdifference': casesdifference, 'deathsdifference': deathsdifference,
@@ -413,6 +403,7 @@
     export default {
         components: {
           Sparkline,
+          CovDetail
         },
         data() {
             return {
@@ -538,17 +529,25 @@
 </script>
 
 
-
 <style scoped>
 .redcell { background-color: rgba(200,30,60,0.3); }
 .redhead { background-color: rgba(200,30,60,0.4); }
 .orangecell { background-color: rgba(250,150,200,0.3); }
 .orangehead { background-color: rgba(250,150,200,0.4); }
+
+.countrycell {
+  vertical-align:middle;
+  font-size:115%;
+}
+
 .minor { opacity:0.65;font-size:small; }
 .blue { color: blue; }
 .red { color:red; }
 
-.info {
-   text-align:left;
-}
+.info { text-align:left; }
 </style>
+
+<style>
+.detail-container { background-color: #e0f0ff; }
+</style>
+

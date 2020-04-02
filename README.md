@@ -33,6 +33,7 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 ## Todo
 
 * charts for each country
+* R0 estimation
 * include information about provinces/states in the list
 * improve mobile experience
 * add horizontal gridlines for sparklines, at positions indicating 3-day, 5-day, 19-day doublings
