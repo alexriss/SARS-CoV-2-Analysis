@@ -133,10 +133,16 @@
             a doubling every 3 days for a daily increase of 26%.
           </li>
           <li>
+            - The doubling time is displayed in the tooltip in the sparklines next to the relative increase, i.e. "26% / 3d".
+          </li>
+          <li>
             - <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
           </li>
           <li>
             - The averages given over n number of days are computeed as geometric averages.
+          </li>
+          <li>
+            - Please double check al computed values and graphs. This is a weekend-project for me, thus I only do very limited testing.
           </li>
           <li>
             - The source code and further information can be found on the respective <a href="https://github.com/alexriss/SARS-CoV-2-Analysis"><i class="fab fa-github"></i> github page</a>.

@@ -1,5 +1,7 @@
 # SARS-CoV-2 Analysis
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) 
+
 ## Description
 
 A quick analysis of coronavirus figures, in particular relative increases in confirmed changes, trendlines,
@@ -22,8 +24,7 @@ Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-Co
 
 ## Is it beta?
 
-Of course! Probably even alpha. It is a weekend project and I just work on this in my free time. Please double check all numbers and graphs.
-
+Of course! Even rather alpha. It is a weekend project and I just work on this in my free time. Please double check all numbers and graphs.
 
 ## Data source
 
@@ -32,7 +33,8 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 ## Todo
 
 * charts for each country
+* include information about provinces/states in the list
 * improve mobile experience
-* add horizontal gridlines at positions indicating 3-day, 5-day, 19-day doublings
+* add horizontal gridlines for sparklines, at positions indicating 3-day, 5-day, 19-day doublings
 * improve tooltip position for sparklines, probably static position will be best
 * calculate the CFR based on confirmed cases n days ago (controlled via slider)
