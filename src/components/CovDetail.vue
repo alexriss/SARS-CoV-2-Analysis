@@ -1,14 +1,10 @@
 <template>
 <div class="echarts">
-  <v-chart :options="options" style="width: 100%;" />
+  <v-chart :options="options" :init-options="initOptions" style="width: 100%;" />
 </div>
 </template>
 
 <script>
-// scale the display for deceased cases
-// var ratioCD = 10;
-// var ratioDiffCD = 10;
-
 var seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed increase', 'deceased increase'];
 var formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%'];
 var extraSpaceAfter = [2, 4];  // add extra spacer in the tooltip after those indices of seriesNames
@@ -26,6 +22,7 @@ import "echarts/lib/component/tooltip";
 import "echarts/lib/component/legend";
 import "echarts/lib/component/toolbox";
 import "echarts/lib/component/axisPointer";
+// import 'zrender/lib/svg/svg';
 
 function splitData(rowdata) {
   var dates = rowdata['dates'];
@@ -33,8 +30,8 @@ function splitData(rowdata) {
   var deaths = [];
   var casesdifference = [0];
   var deathsdifference = [0];
-  var caseschange = [NaN];
-  var deathschange = [NaN];
+  var caseschange = [0];
+  var deathschange = [0];
   var deceasedrelative = []
 
   for (var i = 0; i < dates.length; i++) {
@@ -66,10 +63,6 @@ function splitData(rowdata) {
     caseschange: caseschange,
     deathschange: deathschange,
     deceasedrelative: deceasedrelative,
-    // casesMax: Math.max(...cases),
-    // deathsMax: Math.max(...deaths),
-    // casesdifferenceMax: Math.max(...casesdifference),
-    // deathsdifferenceMax: Math.max(...deathsdifference),
   };
 }
 
@@ -81,6 +74,9 @@ export default {
   data() {
     var splitChartData = splitData(this.chartData);
     return {
+        initOptions: {
+            renderer: 'canvas',  // at some point we can switch to svg (not seems a bit premature for now)
+        },
         options: {
             title: {
                 text: this.chartData.country,
@@ -131,11 +127,15 @@ export default {
                         yAxisIndex: 'none'
                     },
                     restore: { title: 'reset' },
-                    saveAsImage: { title: 'save as image' }
+                    // saveAsImage: {
+                    //     show: false,
+                    //     title: 'save as image',
+                    //     type: 'png'  // should be svg for svg renderer (doesnt seem to work for my image yet)
+                    // }
                 }
             },
             axisPointer: {
-                link: {xAxisIndex: 'all'}
+                link: { xAxisIndex: 'all' }
             },
             dataZoom: [
                 {
@@ -247,7 +247,6 @@ export default {
                     type: 'log',
                     minorTick: { show: true },
                     minorSplitLine: { show: true },
-                    // max: splitChartData['casesMax'] / ratioCD,
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');   // or '0,0e+0'
@@ -261,7 +260,6 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
-                    // max: splitChartData['casesdifferenceMax'],
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');
@@ -276,7 +274,6 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
-                    // max: splitChartData['casesdifferenceMax'] / ratioDiffCD,
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');
@@ -375,30 +372,38 @@ export default {
                     data: splitChartData['deathsdifference'],
                 },
                 {
-                    name: 'confirmed increase',
-                    type: 'line',
-                    color: '#3179bd',
-                    smooth: true,
-                    sampling: 'average',  // average if points are smaller than display size, for better performance
-                    areaStyle: {},
-                    xAxisIndex: 2,
-                    yAxisIndex: 4,
-                    symbolSize: 1,
-                    hoverAnimation: true,
-                    data: splitChartData['caseschange'],
-                },
-                {
                     name: 'deceased increase',
                     type: 'line',
+                    lineStyle: {
+                        opacity: 0.2,
+                        type: 'solid'
+                    },
                     color: '#9d3131',
                     smooth: true,
                     sampling: 'average',  // average if points are smaller than display size, for better performance
-                    areaStyle: { opacity: 0.2 },
+                    areaStyle: { opacity: 0.69 },
                     xAxisIndex: 2,
                     yAxisIndex: 4,
-                    symbolSize: 1,
+                    symbolSize: 0,
                     hoverAnimation: true,
                     data: splitChartData['deathschange'],
+                },
+                {
+                    name: 'confirmed increase',
+                    type: 'line',
+                    lineStyle: {
+                        opacity: 0.2,
+                        type: 'solid'
+                    },
+                    color: '#3179bd',
+                    smooth: true,
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
+                    areaStyle: { opacity:0.69 },
+                    xAxisIndex: 2,
+                    yAxisIndex: 4,
+                    symbolSize: 0,
+                    hoverAnimation: true,
+                    data: splitChartData['caseschange'],
                 },
             ]
         }

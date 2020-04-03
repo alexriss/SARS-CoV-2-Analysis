@@ -1,8 +1,8 @@
 <template>
     <section class="section">
-        <b-field grouped>
+        <b-field group-multiline>
             <div class="control is-flex">
-            <b-field label="Show countries with a minimum number of confirmed cases">
+            <b-field label="Minimum number of confirmed cases">
             <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData()'>
                 <b-slider-tick
                     v-for="(item, index) in minCasesList"
@@ -14,11 +14,11 @@
             </div>
             <div style="width:70px;"></div>
             <div class="field">
-                <b-checkbox v-model="showprovinces" @input='updateData()'>show states/provinces</b-checkbox>
+                <b-checkbox v-model="showprovinces" @input='updateData()'>Show states/provinces</b-checkbox>
             </div>
             <div style="width:70px;"></div>
             <div class="field">
-                <b-checkbox v-model="showdetails">show details</b-checkbox>
+                <b-checkbox v-model="showdetails">Extra details</b-checkbox>
             </div>
             <!--
             <div style='position:absolute; top:10px; left:10px;'>
