@@ -5,6 +5,11 @@
 </template>
 
 <script>
+
+// scale the display for deceased cases
+// var ratioCD = 10;
+// var ratioDiffCD = 10;
+
 import numeral from 'numeral'
 import ECharts from "vue-echarts";
 import 'echarts/lib/langEN';
@@ -22,12 +27,11 @@ function splitData(rowdata) {
   var dates = rowdata['dates'];
   var cases = [];
   var deaths = [];
-  var deathstimes = [];
   var casesdifference = [0];
   var deathsdifference = [0];
-  var deathsdifferencetimes = [0];
   var caseschange = [NaN];
   var deathschange = [NaN];
+  var deceasedrelative = []
 
   for (var i = 0; i < dates.length; i++) {
     if (rowdata["cases"][dates[i]] > 0) {  // we dont want zeros for log plots
@@ -37,30 +41,31 @@ function splitData(rowdata) {
     }
     if (rowdata["deaths"][dates[i]] > 0) {  // we dont want zeros for log plots
       deaths.push(rowdata["deaths"][dates[i]]);
-      deathstimes.push(rowdata["deaths"][dates[i]] * 5);
     } else {
       deaths.push(NaN);
-      deathstimes.push(NaN);
     }
     if (i > 0) {
       casesdifference.push(rowdata["casesdifference"][dates[i]]);
       deathsdifference.push(rowdata["deathsdifference"][dates[i]]);
-      deathsdifferencetimes.push(rowdata["deathsdifference"][dates[i]] * 5);
       caseschange.push(rowdata["caseschange"][dates[i]]);
       deathschange.push(rowdata["deathschange"][dates[i]]);
     }
+    deceasedrelative.push(rowdata["deceasedrelative"][dates[i]]);
   }
-  
+
   return {
     dates: dates,
     cases: cases,
     deaths: deaths,
-    deathstimes: deathstimes,
     casesdifference: casesdifference,
     deathsdifference: deathsdifference,
-    deathsdifferencetimes: deathsdifferencetimes,
     caseschange: caseschange,
-    deathschange: deathschange
+    deathschange: deathschange,
+    deceasedrelative: deceasedrelative,
+    // casesMax: Math.max(...cases),
+    // deathsMax: Math.max(...deaths),
+    // casesdifferenceMax: Math.max(...casesdifference),
+    // deathsdifferenceMax: Math.max(...deathsdifference),
   };
 }
 
@@ -70,7 +75,7 @@ export default {
   },
   props: ['chartData'],
   data() {
-    //console.log(this.chartData);
+    var splitChartData = splitData(this.chartData);
     return {
         option: {
             title: {
@@ -85,7 +90,7 @@ export default {
             }
             },
             legend: {
-            data: ['confirmed: total', 'deceased: total x 5', 'confirmed: daily', 'deceased: daily x 5', 'confirmed: increase', 'deceased: increase'],
+            data: ['confirmed: total', 'deceased: total', 'confirmed: daily', 'deceased: daily', 'confirmed: increase', 'deceased: increase'],
             left: 55
             },
             toolbox: {
@@ -167,7 +172,7 @@ export default {
                     type: 'category',
                     boundaryGap: false,
                     axisLine: {onZero: true},
-                    data: splitData(this.chartData)['dates'],
+                    data: splitChartData['dates'],
                     show: false
                 },
                 {
@@ -175,7 +180,7 @@ export default {
                     type: 'category',
                     boundaryGap: false,
                     axisLine: {onZero: true},
-                    data: splitData(this.chartData)['dates'],
+                    data: splitChartData['dates'],
                     position: 'bottom',
                     show: false
                 },
@@ -184,7 +189,7 @@ export default {
                     type: 'category',
                     boundaryGap: false,
                     axisLine: {onZero: true},
-                    data: splitData(this.chartData)['dates'],
+                    data: splitChartData['dates'],
                     position: 'bottom'
                 }
             ],
@@ -196,11 +201,29 @@ export default {
                     type: 'log',
                     minorTick: { show: true },
                     minorSplitLine: { show: true },
+                    // max: splitChartData['casesMax'],
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');   // or '0,0e+0'
                         }
-                    }
+                    },
+                    axisLine: { lineStyle: { color: '#0159ad' } },
+                },
+                {
+                    name: 'cumulative deceased',
+                    show: true,
+                    nameLocation: 'center',
+                    nameGap: 40,
+                    type: 'log',
+                    minorTick: { show: true },
+                    minorSplitLine: { show: true },
+                    // max: splitChartData['casesMax'] / ratioCD,
+                    axisLabel: {
+                        formatter: function (val) {
+                            return numeral(val).format('0a');   // or '0,0e+0'
+                        }
+                    },
+                    axisLine: { lineStyle: { color: '#8d0101' } },
                 },
                 {
                     gridIndex: 1,
@@ -208,11 +231,28 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
+                    // max: splitChartData['casesdifferenceMax'],
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');
                         }
-                    }
+                    },
+                    axisLine: { lineStyle: { color: '#0159ad' } },
+                },
+                {
+                    gridIndex: 1,
+                    name: 'daily deceased',
+                    show: true,
+                    nameLocation: 'center',
+                    nameGap: 40,
+                    type: 'value',
+                    // max: splitChartData['casesdifferenceMax'] / ratioDiffCD,
+                    axisLabel: {
+                        formatter: function (val) {
+                            return numeral(val).format('0a');
+                        }
+                    },
+                    axisLine: { lineStyle: { color: '#8d0101' } },
                 },
                 {
                     gridIndex: 2,
@@ -220,76 +260,114 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
-                    max: 0.4,
+                    max: function (value) { return Math.min(value.max, 0.5); },
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0%');
                         }
                     }
-                }
-            ],
+                },
+                {
+                    gridIndex: 0,
+                    name: 'CFR',
+                    show: false,
+                    nameLocation: 'center',
+                    nameGap: 40,
+                    type: 'value',
+                    max: function (value) { return Math.max(value.max, 0.1); },
+                    axisLabel: {
+                        formatter: function (val) {
+                            return numeral(val).format('0.0%');
+                        }
+                    }
+                }            ],
             series: [
                 {
                     name: 'confirmed: total',
                     type: 'line',
                     color: '#3179bd',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['cases'], 
+                    data: splitChartData['cases'], 
                 },
                 {
-                    name: 'deceased: total x 5',
+                    name: 'deceased: total',
                     type: 'line',
                     color: '#9d3131',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 0,
-                    yAxisIndex: 0,
+                    yAxisIndex: 1,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['deathstimes'],
+                    data: splitChartData['deaths'],
                 },
                 {
                     name: 'confirmed: daily',
                     type: 'bar',
-                    barGap: '-90%',
+                    barGap: '-100%',
                     barCategoryGap: '10%',
                     color: '#3179bd',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 1,
-                    yAxisIndex: 1,
+                    yAxisIndex: 2,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['casesdifference'],
+                    data: splitChartData['casesdifference'],
                 },
                 {
-                    name: 'deceased: daily x 5',
+                    name: 'deceased: daily',
                     type: 'bar',
                     color: 'rgba(157,49,49,0.65)', //'#9d3131',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 1,
-                    yAxisIndex: 1,
+                    yAxisIndex: 3,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['deathsdifferencetimes'],
+                    data: splitChartData['deathsdifference'],
                 },
                 {
                     name: 'confirmed: increase',
                     type: 'line',
                     color: '#3179bd',
+                    smooth: true,
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     areaStyle: {},
                     xAxisIndex: 2,
-                    yAxisIndex: 2,
+                    yAxisIndex: 4,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['caseschange'],
+                    data: splitChartData['caseschange'],
                 },
                 {
                     name: 'deceased: increase',
                     type: 'line',
                     color: '#9d3131',
+                    smooth: true,
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
                     areaStyle: { opacity: 0.2 },
                     xAxisIndex: 2,
-                    yAxisIndex: 2,
+                    yAxisIndex: 4,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitData(this.chartData)['deathschange'],
+                    data: splitChartData['deathschange'],
+                },
+                {
+                    name: 'CFR*',
+                    type: 'line',
+                    lineStyle: {
+                        opacity: 0.2,
+                        type: 'solid'
+                    },
+                    color: '#9d3161',
+                    smooth: true,
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
+                    areaStyle: { opacity: 0.2 },
+                    xAxisIndex: 0,
+                    yAxisIndex: 5,
+                    symbolSize: 0,
+                    hoverAnimation: true,
+                    data: splitChartData['deceasedrelative'],
                 }
             ]
         }
