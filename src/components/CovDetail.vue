@@ -40,6 +40,7 @@ function splitData(rowdata) {
       deathstimes.push(rowdata["deaths"][dates[i]] * 5);
     } else {
       deaths.push(NaN);
+      deathstimes.push(NaN);
     }
     if (i > 0) {
       casesdifference.push(rowdata["casesdifference"][dates[i]]);

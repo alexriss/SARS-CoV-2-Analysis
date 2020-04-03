@@ -32,7 +32,7 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 
 ## Todo
 
-* charts for each country
+* improve charts for each country
 * R0 estimation
 * include information about provinces/states in the list
 * improve mobile experience
