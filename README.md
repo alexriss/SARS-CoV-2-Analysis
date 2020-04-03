@@ -32,7 +32,6 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 
 ## Todo
 
-* improve charts for each country
 * parse US states
 * R0 estimation
 * improve mobile experience

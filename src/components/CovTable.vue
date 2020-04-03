@@ -59,13 +59,13 @@
                 </b-table-column>
 
                 <b-table-column field="caseslatest" label="Confirmed" numeric sortable>
-                    <strong>{{ props.row.cases[latest] }}</strong>
+                    <strong class='tablenumber'>{{ props.row.cases[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minor"> +{{ props.row.casesdifference[latest] }} </span>
+                    <span class="minorcolor"> +{{ props.row.casesdifference[latest] | numeral('0,0') }} </span>
                 </b-table-column>
 
                 <b-table-column field="caseschangelatest" label="Increase" numeric sortable>
-                    <strong>+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
+                    <strong class="tablenumber">+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
                     <span class="minor" v-if="showdetails">
                     <br />3d avg: +{{ props.row.caseschangelatest3 | numeral('0.0%')}}
                     <br />8d avg: +{{ props.row.caseschangelatest8 | numeral('0.0%')}}
@@ -79,9 +79,9 @@
                 </b-table-column>
 
                 <b-table-column field="deathslatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
-                    <strong>{{ props.row.deaths[latest] }}</strong>
+                    <strong class='tablenumber'>{{ props.row.deaths[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minor red" style="opacity:0.9;"> +{{ props.row.deathsdifference[latest] }} </span>
+                    <span class="minorcolor red" style="opacity:0.9;"> +{{ props.row.deathsdifference[latest] | numeral('0,0') }} </span>
                 </b-table-column>
 
                 <b-table-column field="deathschangelatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
@@ -113,8 +113,8 @@
                     <div class="media-content">
                         <div class="content">
                             <cov-detail :chart-data="props.row" />
-                            <br />
-                            <!-- <small> {{ props.row.cases }}</small> -->
+                            <!-- <br />
+                            <small> {{ props.row.cases }}</small> -->
                         </div>
                     </div>
                 </article>
@@ -569,10 +569,14 @@
 }
 
 .minor { opacity:0.65;font-size:small; }
+.minorcolor { opacity:0.65; }
 .blue { color: blue; }
 .red { color:red; }
 
 .info { text-align:left; }
+
+strong.tablenumber { font-size:110%; }
+
 </style>
 
 <style>
