@@ -20,7 +20,7 @@ Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-Co
 
 ## Obligatory screenshot
 
-![screenshot](screenshot.png)
+![screenshot of overview](screenshot.png) ![screenshot of detail view](screenshot_detail.png)
 
 ## Is it beta?
 
