@@ -3,7 +3,7 @@
         <b-field grouped>
             <div class="control is-flex">
             <b-field label="Show countries with a minimum number of confirmed cases">
-            <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData(minCasesActive)'>
+            <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData()'>
                 <b-slider-tick
                     v-for="(item, index) in minCasesList"
                     :key="index"
@@ -11,6 +11,10 @@
                 >{{ item }}</b-slider-tick>
             </b-slider>
             </b-field> 
+            </div>
+            <div style="width:70px;"></div>
+            <div class="field">
+                <b-checkbox v-model="showprovinces" @input='updateData()'>show states/provinces</b-checkbox>
             </div>
             <div style="width:70px;"></div>
             <div class="field">
@@ -180,6 +184,8 @@
     var csvDeceased = "time_series_covid19_deaths_global.csv";
     var githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
 
+    var provincesAlwaysShow = ["Hong Kong", "Macau"]
+
     var urlPre = "";
     if (window.location.href.indexOf("github.io") >= 0) {
       urlPre = githubJH;
@@ -240,7 +246,7 @@
     }
 
     // returns row
-    function makerow(country, cases, deaths) {
+    function makerow(country, cases, deaths, isprovince=false) {
       var caseschange = {};
       var deathschange = {};
       var casesdifference = {}
@@ -299,8 +305,8 @@
       }
 
       return {
-        'dates': dates, 'country': country, 'cases': cases, 'deaths': deaths,
-        'caseslatest': cases[latest], 'deathslatest': deaths[latest],
+        'dates': dates, 'country': country, 'isprovince': isprovince,
+        'cases': cases, 'deaths': deaths, 'caseslatest': cases[latest], 'deathslatest': deaths[latest],
         'caseschange': caseschange, 'deathschange': deathschange,
         'casesdifference': casesdifference, 'deathsdifference': deathsdifference,
         'caseschangelatest': caseschange[latest], 'deathschangelatest': deathschange[latest],
@@ -309,7 +315,7 @@
         'deceasedrelative': deceasedrelative, 'deceasedrelativelatest': deceasedrelative[latest], 
         'deceasedrelativelatest3': geomean(deceasedrelative, 3),
         'deceasedrelativelatest8': geomean(deceasedrelative, 8), 
-        'sparklinesdata': sparklinesdata, 'sparklinescfrdata': sparklinescfrdata
+        'sparklinesdata': sparklinesdata, 'sparklinescfrdata': sparklinescfrdata,
       }
     }
 
@@ -339,15 +345,19 @@
     var data = [];
     var dataFiltered = [];
     var currCountry = '';
+    var currProvince = '';
     var country = '';
     var elsC = [];
     var elsD = [];
     var cases = {};
     var deaths = {};
+    var currCases = {};
+    var currDeaths = {};
     var casesWorld = {};
     var deathsWorld = {};
-    var currCases = 0;
-    var currDeaths = 0;
+    var currCasesEntry = 0;
+    var currDeathsEntry = 0;
+    var isprovince = false;
 
     dates.forEach(function (item) {
       casesWorld[item] = 0;
@@ -364,11 +374,12 @@
       if (elsC.length < dates.length + 4) {
         continue;
       }
-      country = elsC[1];
+      currCountry = elsC[1];
+      currProvince = elsC[0];
 
       if (country != currCountry) {
-        if (currCountry != '') {
-          data.push(makerow(currCountry, cases, deaths))
+        if (country != '') {
+          data.push(makerow(country, cases, deaths))
         }
         cases = {};
         deaths = {};
@@ -376,19 +387,33 @@
           cases[item] = 0;
           deaths[item] = 0;
         });
-        currCountry = country;
+        country = currCountry;
       }
+
+      currCases = {};
+      currDeaths = {};
       dates.forEach(function (item, index) {
-        currCases = parseInt(elsC[index+4])
-        currDeaths = parseInt(elsD[index+4])
-        cases[item] += currCases;
-        deaths[item] += currDeaths;
-        casesWorld[item] += currCases;
-        deathsWorld[item] += currDeaths;
+        currCasesEntry = parseInt(elsC[index+4])
+        currDeathsEntry = parseInt(elsD[index+4])
+        cases[item] += currCasesEntry;
+        deaths[item] += currDeathsEntry;
+        currCases[item] = currCasesEntry;
+        currDeaths[item] = currDeathsEntry;
+        casesWorld[item] += currCasesEntry;
+        deathsWorld[item] += currDeathsEntry;
       });
+      if (currProvince.length > 0) {
+        if (provincesAlwaysShow.includes(currProvince)) {
+          isprovince = false;
+        }
+        else {
+          isprovince = true;
+        }
+        data.push(makerow(currCountry + ' - ' + currProvince, currCases, currDeaths, isprovince))
+      }
     }
     // add last country as well
-    data.push(makerow(currCountry, cases, deaths))
+    data.push(makerow(country, cases, deaths))
 
     // add world
     data.push(makerow("World", casesWorld, deathsWorld))
@@ -417,6 +442,7 @@
                 error,
                 latest,
                 showdetails: false,
+                showprovinces: true,
                 daysRelChange,
                 daysCFR,
                 sparklinestyles: {
@@ -501,9 +527,9 @@
             toggle(row) {
                 this.$refs.table.toggleDetails(row)
             },
-            updateData: async function(minCasesVal) {
+            updateData: async function() {
               this.loading = true;
-              var minCases = this.minCasesList[minCasesVal];
+              var minCases = this.minCasesList[this.minCasesActive];
               var currDate = new Date();
               this.timeDataChange = currDate;
 
@@ -514,8 +540,10 @@
                 if (this.timeDataChange != currDate) {  // some other update occured
                   return false;
                 }
-                if (this.data[i]['cases'][latest] > minCases) {
-                  dataNew.push(this.data[i]);
+                if (!this.data[i]['isprovince'] || this.showprovinces) {  // provinces 
+                  if (this.data[i]['cases'][latest] > minCases) {  // mincases
+                    dataNew.push(this.data[i]);
+                  }
                 }
               }
 

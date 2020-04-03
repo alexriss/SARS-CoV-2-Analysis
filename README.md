@@ -33,9 +33,10 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 ## Todo
 
 * improve charts for each country
+* parse US states
 * R0 estimation
-* include information about provinces/states in the list
 * improve mobile experience
 * add horizontal gridlines for sparklines, at positions indicating 3-day, 5-day, 19-day doublings
 * improve tooltip position for sparklines, probably static position will be best
 * calculate the CFR based on confirmed cases n days ago (controlled via slider)
+* save settings locally (vue.js localStorage)

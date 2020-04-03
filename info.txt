@@ -1,0 +1,19 @@
+
+
+
+push to github pages:
+git subtree push --prefix dist origin gh-pages
+https://stackoverflow.com/questions/36782467/set-subdirectory-as-website-root-on-github-pages
+
+
+todo:
+  - design for log plots, switch between log and linear, legend formatting (percentage format, add doubling time), 
+  - sorting a table should trigger re-rendering of detail-charts (or collapsing all open rows)
+  - variable n (for charts that are scaled by multiplication by n), determine n such that we have roughly 50% height of deceased cases, but use base 5 or 10
+  - local storage for settings: https://vuejs.org/v2/cookbook/client-side-storage.html
+  - add horizontal gridlines at certain positions for doublings
+          'value3day': Math.pow(2,1/3)-1,
+          'value6day': Math.pow(2,1/6)-1,
+          'value12day': Math.pow(2,1/12)-1,
+          'value24day': Math.pow(2,1/24)-1,
+
