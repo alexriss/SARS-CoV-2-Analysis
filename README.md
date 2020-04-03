@@ -18,9 +18,13 @@ This is my first [vue.js](https://vuejs.org/) project, so it might not be done c
 
 Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-CoV-2-Analysis/)
 
-## Obligatory screenshot
+## Obligatory screenshots
 
-![screenshot of overview](screenshot.png) ![screenshot of detail view](screenshot_detail.png)
+Table view giving numbers, relative numbers and sparklines:
+![screenshot of overview](screenshot.png)
+
+Detailed view for each country:
+![screenshot of detail view](screenshot_detail.png)
 
 ## Is it beta?
 
