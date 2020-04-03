@@ -231,7 +231,6 @@ export default {
                     type: 'log',
                     minorTick: { show: true },
                     minorSplitLine: { show: true },
-                    // max: splitChartData['casesMax'],
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');   // or '0,0e+0'
@@ -241,7 +240,6 @@ export default {
                 },
                 {
                     name: 'deceased total',
-                    show: true,
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'log',
@@ -260,6 +258,7 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
+                    min: 0,
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');
@@ -274,6 +273,7 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
+                    min: 0,
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0a');
@@ -287,6 +287,7 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
+                    min: 0,
                     max: function (value) { return Math.min(value.max, 0.5); },
                     axisLabel: {
                         formatter: function (val) {
@@ -301,6 +302,7 @@ export default {
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
+                    min: 0,
                     max: function (value) { return Math.max(value.max, 0.1); },
                     axisLabel: {
                         formatter: function (val) {
