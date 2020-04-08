@@ -27,7 +27,7 @@ import "echarts/lib/component/axisPointer";
 
 
 // calculate running average
-function movingAvg(arrayOrig, count){
+function movingAvg(arrayOrig, count, zeroToNan=true){
     let array = [...arrayOrig];  // clone array, otherwise we will alter the one input here
     let extraEnd = Math.round(count/2);
     let extraStart = count - extraEnd;
@@ -42,7 +42,11 @@ function movingAvg(arrayOrig, count){
         for (let j = i - extraStart; j < i + extraEnd; j++) {
             sum += array[j];
         }
-        arrayAvg.push(sum/count);
+        if (zeroToNan && sum == 0) {
+            arrayAvg.push(NaN);
+        } else {
+            arrayAvg.push(sum/count);
+        }
     }
     return arrayAvg;
 }
@@ -340,6 +344,11 @@ export default {
                 {
                     name: 'confirmed total',
                     type: 'line',
+                    lineStyle: {
+                        opacity: 1,
+                        type: 'solid',
+                        width: 3
+                    },
                     color: '#3179bd',
                     sampling: 'average',  // average if points are smaller than display size, for better performance
                     symbolSize: 1,
@@ -349,6 +358,11 @@ export default {
                 {
                     name: 'deceased total',
                     type: 'line',
+                    lineStyle: {
+                        opacity: 1,
+                        type: 'solid',
+                        width: 3
+                    },
                     color: '#9d3131',
                     sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 0,
@@ -379,7 +393,10 @@ export default {
                     type: 'bar',
                     barGap: '-100%',
                     barCategoryGap: '10%',
-                    color: '#3179bd',
+                    itemStyle: {
+                        color: '#3179bd',
+                        opacity: 0.6
+                    },
                     sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 1,
                     yAxisIndex: 2,
@@ -390,7 +407,11 @@ export default {
                 {
                     name: 'deceased daily',
                     type: 'bar',
-                    color: 'rgba(157,49,49,0.65)', //'#9d3131',
+                    itemStyle: {
+                        color: '#9d3131',
+                        opacity: 0.4
+                    },
+                    // color: 'rgba(157,49,49,0.65)', //'#9d3131',
                     sampling: 'average',  // average if points are smaller than display size, for better performance
                     xAxisIndex: 1,
                     yAxisIndex: 3,
@@ -402,7 +423,7 @@ export default {
                     name: 'confirmed daily running average',
                     type: 'line',
                     lineStyle: {
-                        opacity: 0.9,
+                        opacity: 1,
                         type: 'solid',
                         width: 3
                     },
@@ -418,7 +439,7 @@ export default {
                     name: 'deceased daily running average',
                     type: 'line',
                     lineStyle: {
-                        opacity: 0.9,
+                        opacity: 1,
                         type: 'solid',
                         width: 3
                     },
