@@ -24,6 +24,43 @@ import "echarts/lib/component/toolbox";
 import "echarts/lib/component/axisPointer";
 // import 'zrender/lib/svg/svg';
 
+
+/**
+* returns an array with moving average of the input array
+* @param array - the input array
+* @param count - the number of elements to include in the moving average calculation
+* @param qualifier - an optional function that will be called on each 
+*  value to determine whether it should be used
+*/
+function movingAvg(array, count, qualifier){
+    // calculate average for subarray
+    var avg = function(array, qualifier){
+        var sum = 0, count = 0, val;
+        for (let i in array){
+            val = array[i];
+            if (!qualifier || qualifier(val)){
+                sum += val;
+                count++;
+            }
+        }
+        return sum / count;
+    };
+
+    var result = [], val;
+    // pad beginning of result with null values
+    for (let i=0; i < count-1; i++)
+        result.push(null);
+    // calculate average for each subarray and add to result
+    for (let i=0, len=array.length - count; i <= len; i++){
+        val = avg(array.slice(i, i + count), qualifier);
+        if (isNaN(val))
+            result.push(null);
+        else
+            result.push(val);
+    }
+    return result;
+}
+
 function splitData(rowdata) {
   var dates = rowdata['dates'];
   var cases = [];
@@ -60,6 +97,8 @@ function splitData(rowdata) {
     deaths: deaths,
     casesdifference: casesdifference,
     deathsdifference: deathsdifference,
+    casesdifference_avg: movingAvg(casesdifference, 8),
+    deathsdifference_avg:  movingAvg(deathsdifference, 8),
     caseschange: caseschange,
     deathschange: deathschange,
     deceasedrelative: deceasedrelative,
@@ -372,6 +411,38 @@ export default {
                     symbolSize: 1,
                     hoverAnimation: true,
                     data: splitChartData['deathsdifference'],
+                },
+                {
+                    name: 'confirmed daily running average',
+                    type: 'line',
+                    lineStyle: {
+                        opacity: 0.9,
+                        type: 'solid',
+                        width: 4
+                    },
+                    color: '#11599d',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
+                    xAxisIndex: 1,
+                    yAxisIndex: 2,
+                    symbolSize: 1,
+                    hoverAnimation: false,
+                    data: splitChartData['casesdifference_avg'],
+                },
+                {
+                    name: 'deceased daily running average',
+                    type: 'line',
+                    lineStyle: {
+                        opacity: 0.9,
+                        type: 'solid',
+                        width: 4
+                    },
+                    color: '#7d1111',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
+                    xAxisIndex: 1,
+                    yAxisIndex: 3,
+                    symbolSize: 1,
+                    hoverAnimation: false,
+                    data: splitChartData['deathsdifference_avg'],
                 },
                 {
                     name: 'deceased increase',

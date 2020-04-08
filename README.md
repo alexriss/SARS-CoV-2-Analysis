@@ -37,7 +37,7 @@ The data is automatically downloaded from [Johns Hopkins University](https://git
 ## Todo
 
 * parse US states
-* R0 estimation
+* R0 and R estimation
 * improve mobile experience
 * probably: use ECharts for sparklines (instead of charts.js)
 * add horizontal gridlines for sparklines, at positions indicating 3-day, 5-day, 19-day doublings
