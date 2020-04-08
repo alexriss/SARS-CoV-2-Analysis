@@ -5,9 +5,10 @@
 </template>
 
 <script>
-var seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed increase', 'deceased increase'];
-var formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%'];
-var extraSpaceAfter = [2, 4];  // add extra spacer in the tooltip after those indices of seriesNames
+const seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed increase', 'deceased increase'];
+const formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%'];
+const extraSpaceAfter = [2, 4];  // add extra spacer in the tooltip after those indices of seriesNames
+const runningAverage = 12;  // running average over this many points for daily cases chart
 
 import numeral from 'numeral'
 numeral.locale('en');
@@ -25,40 +26,25 @@ import "echarts/lib/component/axisPointer";
 // import 'zrender/lib/svg/svg';
 
 
-/**
-* returns an array with moving average of the input array
-* @param array - the input array
-* @param count - the number of elements to include in the moving average calculation
-* @param qualifier - an optional function that will be called on each 
-*  value to determine whether it should be used
-*/
-function movingAvg(array, count, qualifier){
-    // calculate average for subarray
-    var avg = function(array, qualifier){
-        var sum = 0, count = 0, val;
-        for (let i in array){
-            val = array[i];
-            if (!qualifier || qualifier(val)){
-                sum += val;
-                count++;
-            }
-        }
-        return sum / count;
-    };
+// calculate running average
+function movingAvg(arrayOrig, count){
+    let array = [...arrayOrig];  // clone array, otherwise we will alter the one input here
+    let extraEnd = Math.round(count/2);
+    let extraStart = count - extraEnd;
 
-    var result = [], val;
-    // pad beginning of result with null values
-    for (let i=0; i < count-1; i++)
-        result.push(null);
-    // calculate average for each subarray and add to result
-    for (let i=0, len=array.length - count; i <= len; i++){
-        val = avg(array.slice(i, i + count), qualifier);
-        if (isNaN(val))
-            result.push(null);
-        else
-            result.push(val);
+    // expand by constant values
+    array.unshift(...Array(extraStart).fill(array[0]))
+    array.push(...Array(extraEnd).fill(array[array.length-1]))
+    let arrayAvg = [];
+    for (let i = extraStart; i < array.length-extraEnd; i++)
+    {
+        let sum = 0;
+        for (let j = i - extraStart; j < i + extraEnd; j++) {
+            sum += array[j];
+        }
+        arrayAvg.push(sum/count);
     }
-    return result;
+    return arrayAvg;
 }
 
 function splitData(rowdata) {
@@ -97,8 +83,8 @@ function splitData(rowdata) {
     deaths: deaths,
     casesdifference: casesdifference,
     deathsdifference: deathsdifference,
-    casesdifference_avg: movingAvg(casesdifference, 8),
-    deathsdifference_avg:  movingAvg(deathsdifference, 8),
+    casesdifference_avg: movingAvg(casesdifference, runningAverage),
+    deathsdifference_avg:  movingAvg(deathsdifference, runningAverage),
     caseschange: caseschange,
     deathschange: deathschange,
     deceasedrelative: deceasedrelative,
@@ -418,7 +404,7 @@ export default {
                     lineStyle: {
                         opacity: 0.9,
                         type: 'solid',
-                        width: 4
+                        width: 3
                     },
                     color: '#11599d',
                     sampling: 'average',  // average if points are smaller than display size, for better performance
@@ -434,7 +420,7 @@ export default {
                     lineStyle: {
                         opacity: 0.9,
                         type: 'solid',
-                        width: 4
+                        width: 3
                     },
                     color: '#7d1111',
                     sampling: 'average',  // average if points are smaller than display size, for better performance
