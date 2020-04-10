@@ -177,7 +177,7 @@
     var daysRelChange = 14
     var daysCFR = 30
 
-    var minCasesList = [0,100,500,1000,2000,5000];
+    var minCasesList = [0,500,1000,2000,5000, 10000];
     var minCasesActive = 3; // index
 
     var csvConfirmed = "time_series_covid19_confirmed_global.csv";
@@ -237,12 +237,20 @@
     }
 
     // calculates the geometric mean of the last n entries in arr
-    function geomean(arr, num) {
-      var prod = 1;
-      for (var i=dates.length-1; i>=dates.length-num; i--) {
-        prod *= arr[dates[i]];
+    function arrMean(arr, num, geom=false) {
+      if (geom) {
+        let prod = 1;
+        for (let i=dates.length-1; i>=dates.length-num; i--) {
+          prod *= arr[dates[i]];
+        }
+        return Math.pow(prod, 1/num);
+      } else {
+        let sum = 0;
+        for (let i=dates.length-1; i>=dates.length-num; i--) {
+          sum += arr[dates[i]];
+        }
+        return sum/num;
       }
-      return Math.pow(prod, 1/num);
     }
 
     // returns row
@@ -310,11 +318,11 @@
         'caseschange': caseschange, 'deathschange': deathschange,
         'casesdifference': casesdifference, 'deathsdifference': deathsdifference,
         'caseschangelatest': caseschange[latest], 'deathschangelatest': deathschange[latest],
-        'caseschangelatest3': geomean(caseschange, 3), 'deathschangelatest3': geomean(deathschange, 3),
-        'caseschangelatest8': geomean(caseschange, 8), 'deathschangelatest8': geomean(deathschange, 8),
+        'caseschangelatest3': arrMean(caseschange, 3), 'deathschangelatest3': arrMean(deathschange, 3),
+        'caseschangelatest8': arrMean(caseschange, 8), 'deathschangelatest8': arrMean(deathschange, 8),
         'deceasedrelative': deceasedrelative, 'deceasedrelativelatest': deceasedrelative[latest], 
-        'deceasedrelativelatest3': geomean(deceasedrelative, 3),
-        'deceasedrelativelatest8': geomean(deceasedrelative, 8), 
+        'deceasedrelativelatest3': arrMean(deceasedrelative, 3),
+        'deceasedrelativelatest8': arrMean(deceasedrelative, 8), 
         'sparklinesdata': sparklinesdata, 'sparklinescfrdata': sparklinescfrdata,
       }
     }
@@ -442,7 +450,7 @@
                 error,
                 latest,
                 showdetails: false,
-                showprovinces: true,
+                showprovinces: false,
                 daysRelChange,
                 daysCFR,
                 sparklinestyles: {
