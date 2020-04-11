@@ -520,7 +520,7 @@
                       yAxes: [{
                           display: false,
                           ticks: {
-                            min: 0, max: 0.10,
+                            min: 0, max: 0.12,
                             callback: function (value) { return numeral(value).format('0,0%') }
                           }
                       }],
