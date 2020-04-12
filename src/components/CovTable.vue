@@ -61,14 +61,14 @@
                 <b-table-column field="caseslatest" label="Confirmed" numeric sortable>
                     <strong class='tablenumber'>{{ props.row.cases[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minorcolor"> +{{ props.row.casesdifference[latest] | numeral('0,0') }} </span>
+                    <span class="minorcolor">{{ props.row.casesdifference[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
                 <b-table-column field="caseschangelatest" label="Increase" numeric sortable>
-                    <strong class="tablenumber">+{{ props.row.caseschange[latest] | numeral('0.0%')}}</strong>
+                    <strong class="tablenumber">{{ props.row.caseschange[latest] | numeral('+0.0%')}}</strong>
                     <span class="minor" v-if="showdetails">
-                    <br />3d avg: +{{ props.row.caseschangelatest3 | numeral('0.0%')}}
-                    <br />8d avg: +{{ props.row.caseschangelatest8 | numeral('0.0%')}}
+                    <br />3d avg: {{ props.row.caseschangelatest3 | numeral('+0.0%')}}
+                    <br />8d avg: {{ props.row.caseschangelatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
                 
@@ -81,14 +81,14 @@
                 <b-table-column field="deathslatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
                     <strong class='tablenumber'>{{ props.row.deaths[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minorcolor red" style="opacity:0.9;"> +{{ props.row.deathsdifference[latest] | numeral('0,0') }} </span>
+                    <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdifference[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
                 <b-table-column field="deathschangelatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
-                    +{{ props.row.deathschange[latest] | numeral('0.0%')}}
+                    {{ props.row.deathschange[latest] | numeral('+0.0%')}}
                     <span class="minor" v-if="showdetails">
-                    <br />3d avg: +{{ props.row.deathschangelatest3 | numeral('0.0%')}}
-                    <br />8d avg: +{{ props.row.deathschangelatest8 | numeral('0.0%')}}
+                    <br />3d avg: {{ props.row.deathschangelatest3 | numeral('+0.0%')}}
+                    <br />8d avg: {{ props.row.deathschangelatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
 
