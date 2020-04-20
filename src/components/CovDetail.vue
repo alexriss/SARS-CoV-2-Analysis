@@ -1,6 +1,6 @@
 <template>
-<div class="echarts">
-  <v-chart :options="options" :init-options="initOptions" style="width: 100%;" />
+<div class="echarts" :id="'detail_' + country">
+  <v-chart :ref="'detailchart_' + country" :options="options" :init-options="initOptions" style="width: 100%;" />
 </div>
 </template>
 
@@ -55,10 +55,10 @@ function splitData(rowdata) {
   var dates = rowdata['dates'];
   var cases = [];
   var deaths = [];
-  var casesdifference = [0];
-  var deathsdifference = [0];
-  var caseschange = [0];
-  var deathschange = [0];
+  var casesdaily = [0];
+  var deathsdaily = [0];
+  var casesChange = [0];
+  var deathsChange = [0];
   var deceasedrelative = []
 
   for (var i = 0; i < dates.length; i++) {
@@ -73,10 +73,10 @@ function splitData(rowdata) {
       deaths.push(NaN);
     }
     if (i > 0) {
-      casesdifference.push(rowdata["casesdifference"][dates[i]]);
-      deathsdifference.push(rowdata["deathsdifference"][dates[i]]);
-      caseschange.push(rowdata["caseschange"][dates[i]]);
-      deathschange.push(rowdata["deathschange"][dates[i]]);
+      casesdaily.push(rowdata["casesdaily"][dates[i]]);
+      deathsdaily.push(rowdata["deathsdaily"][dates[i]]);
+      casesChange.push(rowdata["casesChange"][dates[i]]);
+      deathsChange.push(rowdata["deathsChange"][dates[i]]);
     }
     deceasedrelative.push(rowdata["deceasedrelative"][dates[i]]);
   }
@@ -85,12 +85,12 @@ function splitData(rowdata) {
     dates: dates,
     cases: cases,
     deaths: deaths,
-    casesdifference: casesdifference,
-    deathsdifference: deathsdifference,
-    casesdifference_avg: movingAvg(casesdifference, runningAverage),
-    deathsdifference_avg:  movingAvg(deathsdifference, runningAverage),
-    caseschange: caseschange,
-    deathschange: deathschange,
+    casesdaily: casesdaily,
+    deathsdaily: deathsdaily,
+    casesdaily_avg: movingAvg(casesdaily, runningAverage),
+    deathsdaily_avg:  movingAvg(deathsdaily, runningAverage),
+    casesChange: casesChange,
+    deathsChange: deathsChange,
     deceasedrelative: deceasedrelative,
   };
 }
@@ -103,6 +103,7 @@ export default {
   data() {
     var splitChartData = splitData(this.chartData);
     return {
+        country: this.chartData.country,
         initOptions: {
             renderer: 'canvas',  // at some point we can switch to svg (not seems a bit premature for now)
         },
@@ -402,7 +403,7 @@ export default {
                     yAxisIndex: 2,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitChartData['casesdifference'],
+                    data: splitChartData['casesdaily'],
                 },
                 {
                     name: 'deceased daily',
@@ -417,7 +418,7 @@ export default {
                     yAxisIndex: 3,
                     symbolSize: 1,
                     hoverAnimation: true,
-                    data: splitChartData['deathsdifference'],
+                    data: splitChartData['deathsdaily'],
                 },
                 {
                     name: 'confirmed daily running average',
@@ -433,7 +434,7 @@ export default {
                     yAxisIndex: 2,
                     symbolSize: 1,
                     hoverAnimation: false,
-                    data: splitChartData['casesdifference_avg'],
+                    data: splitChartData['casesdaily_avg'],
                 },
                 {
                     name: 'deceased daily running average',
@@ -449,7 +450,7 @@ export default {
                     yAxisIndex: 3,
                     symbolSize: 1,
                     hoverAnimation: false,
-                    data: splitChartData['deathsdifference_avg'],
+                    data: splitChartData['deathsdaily_avg'],
                 },
                 {
                     name: 'deceased increase',
@@ -466,7 +467,7 @@ export default {
                     yAxisIndex: 4,
                     symbolSize: 0,
                     hoverAnimation: true,
-                    data: splitChartData['deathschange'],
+                    data: splitChartData['deathsChange'],
                 },
                 {
                     name: 'confirmed increase',
@@ -483,12 +484,28 @@ export default {
                     yAxisIndex: 4,
                     symbolSize: 0,
                     hoverAnimation: true,
-                    data: splitChartData['caseschange'],
+                    data: splitChartData['casesChange'],
                 },
             ]
         }
     };
   },
+  mounted() {
+      // todo: update chart
+      //let chartRef = 'detailchart_' + this.chartData.country;
+      //console.log(this.chartData.country);
+      //let c = this.chartData.country;
+      //console.log(this.$refs[chartRef].chart);
+      //let options = this.$refs[chartRef].chart.getOption();
+      //console.log(options['title'][0]['text'], this.chartData.country);
+      //this.$refs[chartRef].destroy();
+      //this.$refs[chartRef].init();
+      //this.$refs[chartRef].chart.setOption({
+      ///    title: [{text: c +  Math.random()}]
+      //});
+      //this.$refs[chartRef].chart.resize();
+
+  }
 };
 </script>
 

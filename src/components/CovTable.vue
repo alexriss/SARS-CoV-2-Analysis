@@ -2,23 +2,38 @@
     <section class="section">
         <b-field group-multiline>
             <div class="control is-flex">
-            <b-field label="Minimum number of confirmed cases">
-            <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData()'>
-                <b-slider-tick
-                    v-for="(item, index) in minCasesList"
-                    :key="index"
-                    :value="index"
-                >{{ item }}</b-slider-tick>
-            </b-slider>
-            </b-field> 
+            <div>
+              <b-tooltip :delay="tooltipDelay" multilined label="The increases show in the table and graphs can be calculated either with respect to the total number of previous cases or with respect to the cases within the last two weeks.">
+              <b-select v-model="increaseType" expanded icon="chart-area" @input='updateData()'>
+                  <option value="total">relative Increase</option>
+                  <option value="14day">2-week relative Increase</option>
+              </b-select>
+              </b-tooltip>
+            </div>
+            <div style="width:70px;"></div>
+              <b-tooltip :delay="tooltipDelay" multilined label="Only countries with this minimum number of cases will be shown.">
+              <b-field label="Minimum number of confirmed cases">
+              <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData()'>
+                  <b-slider-tick
+                      v-for="(item, index) in minCasesList"
+                      :key="index"
+                      :value="index"
+                  >{{ item }}</b-slider-tick>
+              </b-slider>
+              </b-field> 
+              </b-tooltip>
             </div>
             <div style="width:70px;"></div>
             <div class="field">
-                <b-checkbox v-model="showprovinces" @input='updateData()'>Show states/provinces</b-checkbox>
+              <b-tooltip :delay="tooltipDelay" multilined label="Additionally show states and provinces in the list.">
+              <b-checkbox v-model="showprovinces" @input='updateData()'>Show states/provinces</b-checkbox>
+              </b-tooltip>
             </div>
             <div style="width:70px;"></div>
             <div class="field">
-                <b-checkbox v-model="showdetails">Extra details</b-checkbox>
+              <b-tooltip :delay="tooltipDelay" multilined label="Show extra in the list.">
+              <b-checkbox v-model="showdetails">Extra details</b-checkbox>
+              </b-tooltip>
             </div>
             <!--
             <div style='position:absolute; top:10px; left:10px;'>
@@ -42,8 +57,9 @@
             sort-icon="chevron-up"
             sort-icon-size="is-small"
             :show-detail-icon="true"
-            default-sort="caseslatest"
-            default-sort-direction='desc'
+            default-sort="casesLatest"
+            default-sort-direction="desc"
+            @sort="closeAllDetails()"
 
             aria-next-label="Next page"
             aria-previous-label="Previous page"
@@ -53,54 +69,94 @@
 
             <template slot-scope="props">
                 <b-table-column field="country" label="Country" sortable searchable cell-class='countrycell'>
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='You can filter specific countries. Try to type "Germ|Spa" into the text field.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                     <a @click="toggle(props.row)">
                         <strong>{{ props.row.country }}</strong>
                     </a>
                 </b-table-column>
 
-                <b-table-column field="caseslatest" label="Confirmed" numeric sortable>
+                <b-table-column field="casesLatest" label="Confirmed" numeric sortable>
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='Total number and last-day increase of confirmed cases.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                     <strong class='tablenumber'>{{ props.row.cases[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minorcolor">{{ props.row.casesdifference[latest] | numeral('+0,0') }} </span>
+                    <span class="minorcolor">{{ props.row.casesdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
-                <b-table-column field="caseschangelatest" label="Increase" numeric sortable>
-                    <strong class="tablenumber">{{ props.row.caseschange[latest] | numeral('+0.0%')}}</strong>
+                <b-table-column field="casesChangeLatest" label="Increase" numeric sortable>
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases. This is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
+                    <strong class="tablenumber">{{ props.row.casesChange[latest] | numeral('+0.0%')}}</strong>
                     <span class="minor" v-if="showdetails">
-                    <br />3d avg: {{ props.row.caseschangelatest3 | numeral('+0.0%')}}
-                    <br />8d avg: {{ props.row.caseschangelatest8 | numeral('+0.0%')}}
+                    <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('+0.0%')}}
+                    <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
                 
-                <b-table-column field="caseschangelatest8" :label="'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
+                <b-table-column field="casesChangeLatest8" :label="'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases within the last 14 days. Again, this is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
                     <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
                   </div>
                 </b-table-column>
 
-                <b-table-column field="deathslatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
+                <b-table-column field="deathsLatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='Total number and last-day increase of deceased people.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                     <strong class='tablenumber'>{{ props.row.deaths[latest] | numeral('0,0') }}</strong>
                     <br />
-                    <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdifference[latest] | numeral('+0,0') }} </span>
+                    <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
-                <b-table-column field="deathschangelatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
-                    {{ props.row.deathschange[latest] | numeral('+0.0%')}}
+                <b-table-column field="deathsChangeLatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of deceased people. This is either with respect to all deceased cases or with respect to the number of deceased cases within the last two weeks.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
+                    {{ props.row.deathsChange[latest] | numeral('+0.0%')}}
                     <span class="minor" v-if="showdetails">
-                    <br />3d avg: {{ props.row.deathschangelatest3 | numeral('+0.0%')}}
-                    <br />8d avg: {{ props.row.deathschangelatest8 | numeral('+0.0%')}}
+                    <br />3d avg: {{ props.row.deathsChangeLatest3 | numeral('+0.0%')}}
+                    <br />8d avg: {{ props.row.deathsChangeLatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest" label="CFR*" numeric sortable header-class='orangehead' cell-class='orangecell' >
+                <b-table-column field="deceasedrelativeLatest" label="CFR*" numeric sortable header-class='orangehead' cell-class='orangecell' >
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='CFR* is calculated by the ratio of the current total number of deceased cases divided by current total number of confirmed cases.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                     {{ props.row.deceasedrelative[latest] | numeral('0.0%')}}
                     <span class="minor" v-if="showdetails">
-                    <br />3d avg: {{ props.row.deceasedrelativelatest3 | numeral('0.0%')}}
-                    <br />8d avg: {{ props.row.deceasedrelativelatest8| numeral('0.0%')}}
+                    <br />3d avg: {{ props.row.deceasedrelativeLatest3 | numeral('0.0%')}}
+                    <br />8d avg: {{ props.row.deceasedrelativeLatest8| numeral('0.0%')}}
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativelatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
+                <b-table-column field="deceasedrelativeLatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
+                    <template slot="header" slot-scope="{ column }">
+                        <b-tooltip :delay="tooltipDelay" multilined label='The ratio of the current total number of deceased cases divided by current total number of confirmed cases. Shown over the last 30 days.'>
+                            {{ column.label }}
+                        </b-tooltip>
+                    </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
                     <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
                   </div>
@@ -225,12 +281,6 @@
 
     // get js date from string
     function stringToDate(dateStr) {
-      //var mdy = dateStr.split('/');
-      //var month = parseInt(mdy[0]);
-      //var day = parseInt(mdy[1]);
-      //var year = parseInt('20' + mdy[2]);
-      //month-=1;
-      //var dt = new Date(year,month,day);
       var dt = new Date(dateStr);
       var isoDate = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString();
       return isoDate.slice(0, 10);
@@ -255,25 +305,48 @@
 
     // returns row
     function makerow(country, cases, deaths, isprovince=false) {
-      var caseschange = {};
-      var deathschange = {};
-      var casesdifference = {}
-      var deathsdifference = {}
-      var deceasedrelative = {}
+      var casesChange = {};
+      var deathsChange = {};
+      var casesdaily = {};
+      var deathsdaily = {};
+      var deceasedrelative = {};
+      var casesChangeLast14 = {}; // cases for last 14 days
+      var deathsChangeLast14 = {}; // deaths for last 14 days
+      var casesLast14 = 0;
+      var deathsLast14 = 0;
 
       for(var i=0;i<dates.length-1;i++) {
+        // daily cases
+        casesdaily[dates[i+1]]  = cases[dates[i+1]] - cases[dates[i]];
+        deathsdaily[dates[i+1]]  = deaths[dates[i+1]] - deaths[dates[i]];
+
+        // relative change with respect to sum of all cases
         if (cases[dates[i]] > 0) {
-          caseschange[dates[i+1]] = cases[dates[i+1]] / cases[dates[i]] - 1;
+          casesChange[dates[i+1]] = cases[dates[i+1]] / cases[dates[i]] - 1;
         } else {
-          caseschange[dates[i+1]] = 0;
+          casesChange[dates[i+1]] = 0;
         }
         if (deaths[dates[i]] > 0) {
-          deathschange[dates[i+1]] = deaths[dates[i+1]] / deaths[dates[i]] - 1;
+          deathsChange[dates[i+1]] = deaths[dates[i+1]] / deaths[dates[i]] - 1;
         } else {
-          deathschange[dates[i+1]] = 0;
+          deathsChange[dates[i+1]] = 0;
         }
-        casesdifference[dates[i+1]]  = cases[dates[i+1]] - cases[dates[i]];
-        deathsdifference[dates[i+1]]  = deaths[dates[i+1]] - deaths[dates[i]];
+
+        // daily change with respect to sum of cases within last 14 days
+        if (i >= 14) {
+          casesLast14 = cases[dates[i]] - cases[dates[i-14]];
+          deathsLast14 = deaths[dates[i]] - deaths[dates[i-14]];
+        } else {
+          casesLast14 = cases[dates[i]];
+          deathsLast14 = deaths[dates[i]];
+        }
+        if (casesLast14 > 0) {
+          casesChangeLast14[dates[i+1]] = casesdaily[dates[i+1]] / casesLast14;
+          deathsChangeLast14[dates[i+1]] = deathsdaily[dates[i+1]] / deathsLast14;
+        } else {
+          casesChangeLast14[dates[i+1]] = 0;
+          casesChangeLast14[dates[i+1]] = 0;
+        }  
       }
 
       dates.forEach(function (item) {
@@ -285,15 +358,26 @@
       });
 
       var sparklinesdataentries = [];
+      var sparklinesdataentriesLast14 = [];
       for (i=dates.length-1-daysRelChange; i<dates.length; i++) {  // 7 days of sparklines
-        sparklinesdataentries.push(caseschange[dates[i]])
+        sparklinesdataentries.push(casesChange[dates[i]])
+        sparklinesdataentriesLast14.push(casesChangeLast14[dates[i]])
       }
-      var sparklinesdata = {
+      var sparklinesdataTotal = {
         labels: dates.slice(dates.length-1-daysRelChange),
         datasets: [
           {
             label: country,
             data: sparklinesdataentries
+          }
+        ]
+      }
+      var sparklinesdataLast14 = {
+        labels: dates.slice(dates.length-1-daysRelChange),
+        datasets: [
+          {
+            label: country,
+            data: sparklinesdataentriesLast14
           }
         ]
       }
@@ -314,16 +398,31 @@
 
       return {
         'dates': dates, 'country': country, 'isprovince': isprovince,
-        'cases': cases, 'deaths': deaths, 'caseslatest': cases[latest], 'deathslatest': deaths[latest],
-        'caseschange': caseschange, 'deathschange': deathschange,
-        'casesdifference': casesdifference, 'deathsdifference': deathsdifference,
-        'caseschangelatest': caseschange[latest], 'deathschangelatest': deathschange[latest],
-        'caseschangelatest3': arrMean(caseschange, 3), 'deathschangelatest3': arrMean(deathschange, 3),
-        'caseschangelatest8': arrMean(caseschange, 8), 'deathschangelatest8': arrMean(deathschange, 8),
-        'deceasedrelative': deceasedrelative, 'deceasedrelativelatest': deceasedrelative[latest], 
-        'deceasedrelativelatest3': arrMean(deceasedrelative, 3),
-        'deceasedrelativelatest8': arrMean(deceasedrelative, 8), 
-        'sparklinesdata': sparklinesdata, 'sparklinescfrdata': sparklinescfrdata,
+        'cases': cases, 'deaths': deaths, 'casesLatest': cases[latest], 'deathsLatest': deaths[latest],
+
+        'casesChange': casesChangeLast14, 'deathsChange': deathsChange,
+        'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
+        
+        'casesChangeLatest': casesChangeLast14[latest], 'casesChangeLatest3': arrMean(casesChangeLast14, 3), 'casesChangeLatest8': arrMean(casesChangeLast14, 8), 
+        'deathsChangeLatest': deathsChange[latest], 'deathsChangeLatest3': arrMean(deathsChange, 3), 'deathsChangeLatest8': arrMean(deathsChange, 8),
+
+        'deceasedrelative': deceasedrelative, 'deceasedrelativeLatest': deceasedrelative[latest],
+        'deceasedrelativeLatest3': arrMean(deceasedrelative, 3),
+        'deceasedrelativeLatest8': arrMean(deceasedrelative, 8), 
+
+        'sparklinesdata': sparklinesdataLast14, 'sparklinescfrdata': sparklinescfrdata,
+
+        'options': {
+          'casesChange': {'total': casesChange, '14day': casesChangeLast14},
+          'casesChangeLatest': {'total': casesChange[latest], '14day': casesChangeLast14[latest]}, 
+          'casesChangeLatest3': {'total': arrMean(casesChange, 3), '14day': arrMean(casesChangeLast14, 3)}, 
+          'casesChangeLatest8': {'total': arrMean(casesChange, 8), '14day': arrMean(casesChangeLast14, 8)}, 
+          'deathsChange': {'total': deathsChange, '14day': deathsChangeLast14},
+          'deathsChangeLatest': {'total': deathsChange[latest], '14day': deathsChangeLast14[latest]}, 
+          'deathsChangeLatest3': {'total': arrMean(deathsChange, 3), '14day': arrMean(deathsChangeLast14, 3)}, 
+          'deathsChangeLatest8': {'total': arrMean(deathsChange, 8), '14day': arrMean(deathsChangeLast14, 8)}, 
+          'sparklinesdata': {'total': sparklinesdataTotal, '14day': sparklinesdataLast14},
+        }
       }
     }
 
@@ -449,8 +548,10 @@
                 debug,
                 error,
                 latest,
+                increaseType: '14day',
                 showdetails: false,
                 showprovinces: false,
+                tooltipDelay: 650,
                 daysRelChange,
                 daysCFR,
                 sparklinestyles: {
@@ -537,20 +638,26 @@
             },
             updateData: async function() {
               this.loading = true;
+              this.$refs.table.visibleDetailRows  = [];
               var minCases = this.minCasesList[this.minCasesActive];
               var currDate = new Date();
               this.timeDataChange = currDate;
 
               await new Promise(r => setTimeout(r, 200));  // wait a bit, because user might still be changing the values
 
-              var dataNew = []
+              let dataNew = [];
+              let increaseType = this.increaseType;
               for (i=0; i<this.data.length; i++) {
                 if (this.timeDataChange != currDate) {  // some other update occured
                   return false;
                 }
                 if (!this.data[i]['isprovince'] || this.showprovinces) {  // provinces 
                   if (this.data[i]['cases'][latest] > minCases) {  // mincases
-                    dataNew.push(this.data[i]);
+                    let d = this.data[i];
+                    Object.keys(d['options']).forEach(function(key) {  // 14day or total increase type
+                      d[key] = d['options'][key][increaseType];
+                    });
+                    dataNew.push(d);
                   }
                 }
               }
@@ -559,6 +666,9 @@
                 this.dataFiltered = dataNew;
                 this.loading = false;
               }
+            },
+            closeAllDetails: function() {
+              this.$refs.table.visibleDetailRows  = [];
             }
         }
     }
