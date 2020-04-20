@@ -110,7 +110,8 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
+                    <sparkline-echarts :chart-data="props.row" />
+                    <!-- <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' /> //-->
                   </div>
                 </b-table-column>
 
@@ -254,6 +255,7 @@
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
+    import SparklineEcharts from '@/components/SparklineEcharts.vue'
     import CovDetail from '@/components/CovDetail.vue'
 
     // read csv files
@@ -365,21 +367,11 @@
       }
       var sparklinesdataTotal = {
         labels: dates.slice(dates.length-1-daysRelChange),
-        datasets: [
-          {
-            label: country,
-            data: sparklinesdataentries
-          }
-        ]
+        data: sparklinesdataentries
       }
       var sparklinesdataLast14 = {
         labels: dates.slice(dates.length-1-daysRelChange),
-        datasets: [
-          {
-            label: country,
-            data: sparklinesdataentriesLast14
-          }
-        ]
+        data: sparklinesdataentriesLast14
       }
 
       var sparklinescfrdataentries = [];
@@ -535,6 +527,7 @@
     export default {
         components: {
           Sparkline,
+          SparklineEcharts,
           CovDetail
         },
         data() {
