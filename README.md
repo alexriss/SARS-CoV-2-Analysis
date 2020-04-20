@@ -1,6 +1,6 @@
 # SARS-CoV-2 Analysis
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Description
 
@@ -9,7 +9,7 @@ as well as relative CFR ratios (very crudly approximated by a simple division of
 
 ## Why another one?
 
-<strong>We need relative numbers!</strong> All countries have different testing capacities and often also different rules as what counts as confirmed case or coronavirus-related fatality. Thus, relative ration and relative increases in numbers can be more informative.
+__We need relative numbers!__ All countries have different testing capacities and often also different rules as what counts as confirmed case or coronavirus-related fatality. Thus, relative ration and relative increases in numbers can be more informative.
 
 I haven't seen calculations and simple visualizations of relative numbers. That is why I did this quick weekend project.
 This is my first [vue.js](https://vuejs.org/) project, so it might not be done completely optimally.

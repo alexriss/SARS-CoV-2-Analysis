@@ -20,3 +20,20 @@ todo:
           'value12day': Math.pow(2,1/12)-1,
           'value24day': Math.pow(2,1/24)-1,
 
+  - gradient in chartsjs: https://stackoverflow.com/questions/36916867/chart-js-line-different-fill-color-for-negative-point
+
+  - reproduction number:
+    - https://github.com/Stochastik-TU-Ilmenau/COVID-19/find/gh-pages
+    - https://stochastik-tu-ilmenau.github.io/COVID-19/
+    - R Epicalc: https://cran.r-project.org/doc/contrib/Epicalc_Book.pdf
+    - https://www.youtube.com/watch?v=ItW-Q6Npapo
+    - https://www.frontiersin.org/articles/10.3389/fvets.2017.00046/full
+    - https://www.nature.com/articles/s41598-019-39057-w
+    - https://watermark.silverchair.com/040621.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAm8wggJrBgkqhkiG9w0BBwagggJcMIICWAIBADCCAlEGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM4RdTMIb7WfjrZ2lfAgEQgIICIo29eZYrfJVv0Rtww8ZsLzk5ZvDLXzNOOTGbOBv0GlTiWxG5gxtZ1L2wgZpqMK7ye6q_f0i512EOk--PRzz-JSN3aVFsjY98r2YqzdJwBTpA4_VqIfET6zsD90ROt_3BiFBr-fE7UbnWJ27tH9XX6Tds-9mPJAFT8y3M3hOCifySzN_uazlMweU950wX-0VMe9nBFkBypbpkYa-yZfpiwFQEZ_tyJt2tyVjTOnRKSFdcyI3fo7TuJ0STbqP0cN9atK3ZbtLWeptqCdMsvzqSzAlo3WoWrMjt0IYHTR44V6voiVsnBKW9Etcpi9krs4BsqbOjCPT0KyqQXKgWUpA6J9hlt92oeFhVoufEW161qsfFSap7IeD_IT-mArmDWenhj8FMk5kcLKUmC25mPJpDVfdzMlmxcPFmSGCr3CkySAZvOxSbCz1I18Mf_dgwfZzX8TzUPFdCJehulAvA3K1rNz4AxixLmxBvxoMsd75ptlQqMRMZGvdxzNE-YOWqGG2flXJCCCegO5BAmMJoHPNXDrYP94wsVEN_BEI5PkvZ-ZnlOzKnL8uTTlxcIwgCYk9zIqGoT_qnpR77YVN_S5HZnPGSD8b8ZOjEAH7eoyW-ptsusiyb8inxusCIA8eRfnM8hEYp2KBCupu0A9eSOdVsLuEiHOpZnjnVf8TTBNh-Q1s3o_-1lbJhBmrnwcXJe6rkziHMSbFzy5cOvuVf9CLO6QeY8w
+    - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6002118/
+    - https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-12-147
+    - https://web.stanford.edu/~jhj1/teachingdocs/Jones-on-R0.pdf
+    - https://watermark.silverchair.com/kwt133.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAlQwggJQBgkqhkiG9w0BBwagggJBMIICPQIBADCCAjYGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM845byzQS8sthVcyLAgEQgIICB4DrWwBWLTHhTzkjkuSn5hz9EdPuv9KfHUUdbbk_iU7anu8NME_Jg7lXN1TeM4nTIn1e3VyFJf-iLUcuLjX6OsBJWTSnuKTZ-Gg67HURyEQfKqzsGM7Kv06KH4e1_dhLnRaBlgTvqKdwenzslu1BJkJWma7X_3bDoZjRlaCCIfyQ8hqUtVvIlVDoZMosjQsOYmPY3lyCerJljbUfp5VTaf5cVWCEo4FCC35ysUrby_JmVHU40ryZ5-matTmhziHVgoo_j4Df8hYbWiGiwXn_vheH4_pdKh_O4Pvr28S7gXzzBFmtV6bg_cOsUVSfq9ei0lhWo3s_7e2WcJfiUFbbr-z8geQ1_kdTRqX1V3kFwkIi21UfCmHv9-auz5eYdFJkIrZjPFVz67qtTlPx3hEFe9KIz9SDLaUL7fYIQMC_XyyBdL3JGPD2JUUyLzBprevVLhryeJi6JgBU5Z9lSVku3dMxdQ7T-uMr1QGBNyCOdeWBreadRDHJEvr8PsHpNiefdwl9mMS9OhHQyiiXQemIVci-fLaVx6tawHO0pzFd-pM5KaFSML0O_dE0QRqx2V_XKl-ELJMYa5uKqXFF3yeZtLyze5cDvUW1MI4lfE4D8hwZfAVXMMpNsLOWdnB73cuJp-PlzqEtuhBORfaGejn3EJoNdDLF6bBG-0xuhPWIZYLbaCrVHbhZiA
+    - https://zenodo.org/record/2540217
+    - https://www.ages.at/download/0/0/068cb5fb9f2256d267e1a3dc8d464623760fcc30/fileadmin/AGES2015/Wissen-Aktuell/COVID19/Sch%C3%A4tzung_des_seriellen_Intervalles_von_COVID19_2020-04-08.pdf
+    - https://cran.r-project.org/web/packages/EpiEstim/index.html
