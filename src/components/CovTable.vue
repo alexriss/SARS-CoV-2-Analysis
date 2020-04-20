@@ -110,8 +110,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline-echarts :chart-data="props.row" />
-                    <!-- <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' /> //-->
+                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
                   </div>
                 </b-table-column>
 
@@ -248,6 +247,10 @@
       urlPre = githubJH;
     }
 
+    // var sparklineGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    // sparklineGradient.addColorStop(0, 'rgba(250,174,50,1)');   
+    // sparklineGradient.addColorStop(1, 'rgba(250,174,50,0)')
+
     console.log("loading "+ urlPre + csvConfirmed);
     var csvC = readTextFile(urlPre + csvConfirmed);
     console.log("loading "+ urlPre + csvDeceased);
@@ -255,7 +258,6 @@
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
-    import SparklineEcharts from '@/components/SparklineEcharts.vue'
     import CovDetail from '@/components/CovDetail.vue'
 
     // read csv files
@@ -367,11 +369,21 @@
       }
       var sparklinesdataTotal = {
         labels: dates.slice(dates.length-1-daysRelChange),
-        data: sparklinesdataentries
+        datasets: [
+          {
+            label: country,
+            data: sparklinesdataentries
+          }
+        ]
       }
       var sparklinesdataLast14 = {
         labels: dates.slice(dates.length-1-daysRelChange),
-        data: sparklinesdataentriesLast14
+        datasets: [
+          {
+            label: country,
+            data: sparklinesdataentriesLast14
+          }
+        ]
       }
 
       var sparklinescfrdataentries = [];
@@ -527,7 +539,6 @@
     export default {
         components: {
           Sparkline,
-          SparklineEcharts,
           CovDetail
         },
         data() {

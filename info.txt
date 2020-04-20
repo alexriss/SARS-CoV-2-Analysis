@@ -11,6 +11,7 @@ todo:
   - sorting a table should trigger re-rendering of detail-charts (or collapsing all open rows)
       https://github.com/buefy/buefy/issues/596
       https://stackoverflow.com/questions/48844202/toggle-detailed-row-in-buefy-table/52165074
+      https://stackoverflow.com/questions/43728332/vue-chart-js-chart-is-not-updating-when-data-is-changing
   - variable n (for charts that are scaled by multiplication by n), determine n such that we have roughly 50% height of deceased cases, but use base 5 or 10
   - local storage for settings: https://vuejs.org/v2/cookbook/client-side-storage.html
   - add horizontal gridlines at certain positions for doublings
