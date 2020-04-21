@@ -119,24 +119,36 @@ export default {
                     animation: false
                 },
                 formatter: function(params) {
-                    var output = '<table class="tooltiptable"><th colspan="2">' + params[0].name + '</th>';
-                    var index = 0;
-                    var doubling = 0;
-                    var doublingStr = '';
-                    for (var i = 0; i < formatStrs.length; i++) {
+                    let output = '<table class="tooltiptable"><th colspan="2">' + params[0].name + '</th>';
+                    let index = 0;
+                    let doubling = 0;
+                    let doublingNumStr = '';
+                    let doublingStr = '';
+                    for (let i = 0; i < formatStrs.length; i++) {
                         index = params.findIndex(p => p.seriesName == seriesNames[i]);  // echarts seems to reorder the tooltip entries, could not find a way to prevent this, so we do a manual ordering
                         if (index < 0) {
                             continue;
                         }
-                        if (seriesNames[i] == 'confirmed increase' && params[index].value > 0) {
-                            doubling = 1/(Math.log(1 + params[index].value)/Math.log(2));
-                            doublingStr = '<span class="tooltipdoubling"> ' + numeral(doubling).format('0.0') + ' days</span>';
+                        if (seriesNames[i] == 'confirmed increase') {
+                            if (params[index].value <= 0) {
+                                doublingNumStr = '∞ days';
+                            }
+                            else {
+                                doubling = 1/(Math.log(1 + params[index].value)/Math.log(2));
+                                if (doubling > 366) {
+                                    doublingNumStr = '>1 year';
+                                }
+                                else {
+                                    doublingNumStr = numeral(doubling).format('0.0') + ' days';
+                                }
+                            }
+                            doublingStr = '<span class="tooltipdoubling"> ' + doublingNumStr + ' </span>';
                         }
                         else {
                             doublingStr = '';
                         }
                         output += '<tr><td>' + params[index].marker + params[index].seriesName + ': </td><td class="tooltipnumber">'
-                            + numeral(params[index].value).format(formatStrs[i]) + doublingStr + '</td></tr>';
+                            + doublingStr + numeral(params[index].value).format(formatStrs[i]) + '</td></tr>';
                         if (extraSpaceAfter.includes(i)) {
                             output += '<tr><td colspan="2" class="tooltipspacer"></td><tr>';
                         }

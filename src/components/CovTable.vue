@@ -276,6 +276,7 @@
       rawFile.send(null);
       // replace Korea, South
       allText = allText.replace('"Korea, South"', 'South Korea');
+      
       // replaces commas within quotes
       allText = allText.replace(/"[^"]+"/g, function (match) {
         return match.replace(/,/g, ' ');
@@ -582,8 +583,20 @@
                       displayColors: false,
                       callbacks: {
                         label: function(tooltipItem) {
-                          var doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
-                          return numeral(tooltipItem.yLabel).format('0.0%') + ' / ' + numeral(doubling).format('0.0') + 'd';
+                          let doublingStr = '';
+                          if (tooltipItem.yLabel <= 0) {
+                            doublingStr = '∞ d';
+                          }
+                          else {
+                            let doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
+                            if (doubling > 366) {
+                              doublingStr = '>1y';
+                            }
+                            else {
+                              doublingStr = numeral(doubling).format('0.0') + 'd';
+                            }
+                          }
+                          return numeral(tooltipItem.yLabel).format('0.0%') + ' / ' + doublingStr;
                         }
                       }
                     },
@@ -591,7 +604,7 @@
                       yAxes: [{
                           display: false,
                           ticks: {
-                            min: 0, max: 0.35,
+                            min: 0, max: 0.25,
                             callback: function (value) { return numeral(value).format('0,0%') }
                           }
                       }],
