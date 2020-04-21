@@ -110,7 +110,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' />
+                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' :update='sparklineUpdate' />
                   </div>
                 </b-table-column>
 
@@ -158,7 +158,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' />
+                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' :update='0' />
                   </div>
 
                 </b-table-column>
@@ -230,31 +230,33 @@
 </template>
 
 <script>
-    var daysRelChange = 14
-    var daysCFR = 30
+    let daysRelChange = 14
+    let daysCFR = 30
 
-    var minCasesList = [0,500,1000,2000,5000, 10000];
-    var minCasesActive = 3; // index
+    let minCasesList = [0,500,1000,2000,5000, 10000];
+    let minCasesActive = 3; // index
 
-    var csvConfirmed = "time_series_covid19_confirmed_global.csv";
-    var csvDeceased = "time_series_covid19_deaths_global.csv";
-    var githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
+    let csvConfirmed = "time_series_covid19_confirmed_global.csv";
+    let csvDeceased = "time_series_covid19_deaths_global.csv";
+    let githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
 
-    var provincesAlwaysShow = ["Hong Kong", "Macau"]
+    let provincesAlwaysShow = ["Hong Kong", "Macau"]
 
-    var urlPre = "";
+    let urlPre = "";
     if (window.location.href.indexOf("github.io") >= 0) {
       urlPre = githubJH;
     }
 
-    // var sparklineGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    // let sparklineGradient = ctx.createLinearGradient(0, 0, 0, 400);
     // sparklineGradient.addColorStop(0, 'rgba(250,174,50,1)');   
     // sparklineGradient.addColorStop(1, 'rgba(250,174,50,0)')
 
     console.log("loading "+ urlPre + csvConfirmed);
-    var csvC = readTextFile(urlPre + csvConfirmed);
+    let csvC = readTextFile(urlPre + csvConfirmed);
     console.log("loading "+ urlPre + csvDeceased);
-    var csvD = readTextFile(urlPre + csvDeceased);
+    let csvD = readTextFile(urlPre + csvDeceased);
+
+    let sparklineUpdate = 0;
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
@@ -263,8 +265,8 @@
     // read csv files
     function readTextFile(file)
     {
-      var rawFile = new XMLHttpRequest();
-      var allText = '';
+      let rawFile = new XMLHttpRequest();
+      let allText = '';
       rawFile.open("GET", file, false);
       rawFile.onreadystatechange = function () {
         if(rawFile.readyState === 4) {
@@ -286,8 +288,8 @@
 
     // get js date from string
     function stringToDate(dateStr) {
-      var dt = new Date(dateStr);
-      var isoDate = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString();
+      let dt = new Date(dateStr);
+      let isoDate = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString();
       return isoDate.slice(0, 10);
     }
 
@@ -310,17 +312,17 @@
 
     // returns row
     function makerow(country, cases, deaths, isprovince=false) {
-      var casesChange = {};
-      var deathsChange = {};
-      var casesdaily = {};
-      var deathsdaily = {};
-      var deceasedrelative = {};
-      var casesChangeLast14 = {}; // cases for last 14 days
-      var deathsChangeLast14 = {}; // deaths for last 14 days
-      var casesLast14 = 0;
-      var deathsLast14 = 0;
+      let casesChange = {};
+      let deathsChange = {};
+      let casesdaily = {};
+      let deathsdaily = {};
+      let deceasedrelative = {};
+      let casesChangeLast14 = {}; // cases for last 14 days
+      let deathsChangeLast14 = {}; // deaths for last 14 days
+      let casesLast14 = 0;
+      let deathsLast14 = 0;
 
-      for(var i=0;i<dates.length-1;i++) {
+      for(let i=0;i<dates.length-1;i++) {
         // daily cases
         casesdaily[dates[i+1]]  = cases[dates[i+1]] - cases[dates[i]];
         deathsdaily[dates[i+1]]  = deaths[dates[i+1]] - deaths[dates[i]];
@@ -362,14 +364,14 @@
         }
       });
 
-      var sparklinesdataentries = [];
-      var sparklinesdataentriesLast14 = [];
-      for (i=dates.length-1-daysRelChange; i<dates.length; i++) {  // 7 days of sparklines
+      let sparklinesdataentries = [];
+      let sparklinesdataentriesLast14 = [];
+      for (let i=dates.length-daysRelChange; i<dates.length; i++) {  // daysRelChange days of sparklines
         sparklinesdataentries.push(casesChange[dates[i]])
         sparklinesdataentriesLast14.push(casesChangeLast14[dates[i]])
       }
-      var sparklinesdataTotal = {
-        labels: dates.slice(dates.length-1-daysRelChange),
+      let sparklinesdataTotal = {
+        labels: dates.slice(dates.length-daysRelChange),
         datasets: [
           {
             label: country,
@@ -377,8 +379,8 @@
           }
         ]
       }
-      var sparklinesdataLast14 = {
-        labels: dates.slice(dates.length-1-daysRelChange),
+      let sparklinesdataLast14 = {
+        labels: dates.slice(dates.length-daysRelChange),
         datasets: [
           {
             label: country,
@@ -387,12 +389,12 @@
         ]
       }
 
-      var sparklinescfrdataentries = [];
-      for (i=dates.length-1-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
+      let sparklinescfrdataentries = [];
+      for (let i=dates.length-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
         sparklinescfrdataentries.push(deceasedrelative[dates[i]]);
       }
-      var sparklinescfrdata = {
-        labels: dates.slice(dates.length-1-daysCFR),
+      let sparklinescfrdata = {
+        labels: dates.slice(dates.length-daysCFR),
         datasets: [
           {
             label: country,
@@ -415,7 +417,7 @@
         'deceasedrelativeLatest3': arrMean(deceasedrelative, 3),
         'deceasedrelativeLatest8': arrMean(deceasedrelative, 8), 
 
-        'sparklinesdata': sparklinesdataLast14, 'sparklinescfrdata': sparklinescfrdata,
+        'sparklinesdata': JSON.parse(JSON.stringify(sparklinesdataLast14)), 'sparklinescfrdata': sparklinescfrdata,  // we need a deepc copy here to prevent pass-by-reference
 
         'options': {
           'casesChange': {'total': casesChange, '14day': casesChangeLast14},
@@ -427,18 +429,21 @@
           'deathsChangeLatest3': {'total': arrMean(deathsChange, 3), '14day': arrMean(deathsChangeLast14, 3)}, 
           'deathsChangeLatest8': {'total': arrMean(deathsChange, 8), '14day': arrMean(deathsChangeLast14, 8)}, 
           'sparklinesdata': {'total': sparklinesdataTotal, '14day': sparklinesdataLast14},
+        },
+        'optionsObjects': {  // only copy subitems for these, otherwise the objects are references
+          'sparklinesdata': ['datasets', 0, 'data'],
         }
       }
     }
 
-    var debug = [];
-    var error = [];
+    let debug = [];
+    let error = [];
 
-    var arrC = csvC.split("\n");
-    var arrD = csvD.split("\n");
+    let arrC = csvC.split("\n");
+    let arrD = csvD.split("\n");
 
-    var headerC = arrC.shift().split(','); 
-    var headerD = arrD.shift().split(','); 
+    let headerC = arrC.shift().split(','); 
+    let headerD = arrD.shift().split(','); 
 
     // very quick sanity checks
     if (arrC.length != arrD.length) {
@@ -450,33 +455,33 @@
       error.push('Files do not match. ' +headerC + ' vs. ' + headerD);
     }
 
-    var datesStr = headerD.slice(4);
-    var dates = Array.from(datesStr, x => stringToDate(x));
-    var latest = dates[dates.length - 1];
+    let datesStr = headerD.slice(4);
+    let dates = Array.from(datesStr, x => stringToDate(x));
+    let latest = dates[dates.length - 1];
 
-    var data = [];
-    var dataFiltered = [];
-    var currCountry = '';
-    var currProvince = '';
-    var country = '';
-    var elsC = [];
-    var elsD = [];
-    var cases = {};
-    var deaths = {};
-    var currCases = {};
-    var currDeaths = {};
-    var casesWorld = {};
-    var deathsWorld = {};
-    var currCasesEntry = 0;
-    var currDeathsEntry = 0;
-    var isprovince = false;
+    let data = [];
+    let dataFiltered = [];
+    let currCountry = '';
+    let currProvince = '';
+    let country = '';
+    let elsC = [];
+    let elsD = [];
+    let cases = {};
+    let deaths = {};
+    let currCases = {};
+    let currDeaths = {};
+    let casesWorld = {};
+    let deathsWorld = {};
+    let currCasesEntry = 0;
+    let currDeathsEntry = 0;
+    let isprovince = false;
 
     dates.forEach(function (item) {
       casesWorld[item] = 0;
       deathsWorld[item] = 0;
     });
 
-    for (var i=0; i<arrC.length; i++) {
+    for (let i=0; i<arrC.length; i++) {
       elsC = arrC[i].split(',');
       elsD = arrD[i].split(',');
       if (elsC[1] != elsD[1]) {
@@ -531,7 +536,7 @@
     data.push(makerow("World", casesWorld, deathsWorld))
 
     // make initial fitlered data, afterwards it will be updated in the fucntion "updateData"
-    for (i=0; i<data.length; i++) {
+    for (let i=0; i<data.length; i++) {
       if (data[i]['cases'][latest] > 1000) {
         dataFiltered.push(data[i]);
       }
@@ -559,6 +564,7 @@
                 tooltipDelay: 650,
                 daysRelChange,
                 daysCFR,
+                sparklineUpdate,
                 sparklinestyles: {
                   height: '65px',
                   width: '100%',
@@ -656,15 +662,15 @@
             updateData: async function() {
               this.loading = true;
               this.$refs.table.visibleDetailRows  = [];
-              var minCases = this.minCasesList[this.minCasesActive];
-              var currDate = new Date();
+              let minCases = this.minCasesList[this.minCasesActive];
+              let currDate = new Date();
               this.timeDataChange = currDate;
 
               await new Promise(r => setTimeout(r, 200));  // wait a bit, because user might still be changing the values
 
               let dataNew = [];
               let increaseType = this.increaseType;
-              for (i=0; i<this.data.length; i++) {
+              for (let i=0; i<this.data.length; i++) {
                 if (this.timeDataChange != currDate) {  // some other update occured
                   return false;
                 }
@@ -672,7 +678,18 @@
                   if (this.data[i]['cases'][latest] > minCases) {  // mincases
                     let d = this.data[i];
                     Object.keys(d['options']).forEach(function(key) {  // 14day or total increase type
-                      d[key] = d['options'][key][increaseType];
+                      if (key in d['optionsObjects']) {  // we only set a specific sub-object, otherweise we get problems with pass-by-reference
+                        let objGet = d['options'][key][increaseType];
+                        let objSet = d[key];
+                        let pList = d['optionsObjects'][key];  // array that contains the sub-keys
+                        for (let j=0; j < pList.length-1; j++) {
+                          objGet = objGet[pList[j]];
+                          objSet = objSet[pList[j]];
+                        }
+                        objSet[pList[pList.length-1]] = objGet[pList[pList.length-1]].slice();
+                      } else {
+                        d[key] = d['options'][key][increaseType];
+                      }
                     });
                     dataNew.push(d);
                   }
@@ -681,6 +698,7 @@
 
               if (this.timeDataChange == currDate) {  // some other update occured
                 this.dataFiltered = dataNew;
+                this.sparklineUpdate = new Date().getTime();
                 this.loading = false;
               }
             },
