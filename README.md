@@ -20,7 +20,7 @@ Sure, no problem. Here you go: [Live version](https://alexriss.github.io/SARS-Co
 
 ## Obligatory screenshots
 
-Table view giving numbers, relative numbers and sparklines:
+Table view giving numbers, relative numbers, reproduction numbers and sparklines:
 ![screenshot of overview](screenshot.png)
 
 Detailed view for each country:
@@ -32,12 +32,12 @@ Of course! Even rather alpha. It is a weekend project and I just work on this in
 
 ## Data source
 
-The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ.
+The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ. For the calculation of the reproduction source I followed the method of [AG Stochastik, Technische Universität Ilmenau](https://stochastik-tu-ilmenau.github.io/COVID-19/).
 
 ## Todo
 
 * parse US states
-* R0 and R estimation
+* improve R0 and R estimation
 * improve mobile experience
 * probably: use ECharts for sparklines (instead of charts.js)
 * add horizontal gridlines for sparklines, at positions indicating 3-day, 5-day, 19-day doublings

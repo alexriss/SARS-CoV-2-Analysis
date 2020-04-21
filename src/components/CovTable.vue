@@ -7,6 +7,7 @@
               <b-select v-model="increaseType" expanded icon="chart-area" @input='updateData()'>
                   <option value="total">relative Increase</option>
                   <option value="14day">2-week relative Increase</option>
+                  <option value="repronum">reproduction number</option>
               </b-select>
               </b-tooltip>
             </div>
@@ -90,27 +91,32 @@
                     <span class="minorcolor">{{ props.row.casesdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
-                <b-table-column field="casesChangeLatest" label="Increase" numeric sortable>
+                <b-table-column style="min-width:65px" field="casesChangeLatest" :label="(increaseType=='repronum') ? 'R' : 'Increase'" numeric sortable>
                     <template slot="header" slot-scope="{ column }">
                         <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases. This is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
                             {{ column.label }}
                         </b-tooltip>
                     </template> 
-                    <strong class="tablenumber">{{ props.row.casesChange[latest] | numeral('+0.0%')}}</strong>
-                    <span class="minor" v-if="showdetails">
+                    <strong class="tablenumber" v-if="increaseType=='repronum'">{{ props.row.casesChangeLatest | numeral('0.00')}}</strong>
+                    <strong class="tablenumber" v-if="increaseType!='repronum'">{{ props.row.casesChangeLatest | numeral('+0.0%')}}</strong>
+                    <span class="minor" v-if="showdetails && increaseType=='repronum'">
+                    <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('0.00')}}
+                    <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('0.00')}}
+                    </span>
+                    <span class="minor" v-if="showdetails && increaseType!='repronum'">
                     <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('+0.0%')}}
                     <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
                 
-                <b-table-column field="casesChangeLatest8" :label="'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
+                <b-table-column field="casesChangeLatest8" :label="(increaseType=='repronum') ? 'R over ' + daysRelChange + ' days' : 'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
                     <template slot="header" slot-scope="{ column }">
                         <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases within the last 14 days. Again, this is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
                             {{ column.label }}
                         </b-tooltip>
                     </template> 
-                  <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' :update='sparklineUpdate' />
+                  <div style='width:200px;height:65px;margin:auto;'>
+                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' :update='sparklineUpdate' :increase-type='increaseType' />
                   </div>
                 </b-table-column>
 
@@ -157,8 +163,8 @@
                             {{ column.label }}
                         </b-tooltip>
                     </template> 
-                  <div style='width:200px;height:65px;margin:auto;' v-if='true || ["Germany", "US", "Austria", "Italy", "Spain"].includes(props.row.country)'>
-                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' :update='0' />
+                  <div style='width:200px;height:65px;margin:auto;'>
+                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' :update='0' increase-Type='total' />
                   </div>
 
                 </b-table-column>
@@ -178,7 +184,7 @@
         </b-table>
 
       <div class="info">
-        Some notes:
+        Notes:
         <ul>
           <li>
             - The relative changes in the confirmed cases can be related to a doubling rate, i.e.
@@ -191,7 +197,13 @@
             - <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
           </li>
           <li>
-            - The averages given over n number of days are computeed as geometric averages.
+            - For the determination of the reproductive number R, the method of the
+             <a href="https://stochastik-tu-ilmenau.github.io/COVID-19/">AG Stochastik, Technische Universität Ilmenau</a> is used.
+          </li>
+          <li>
+             - For the estimation of R, a daily infectivity profile of {{ infectivity }}
+             <span v-for="item in infectivity" :key='item.index'> {{ item | numeral('0.0%') }} </span>
+              is assumed.
           </li>
           <li>
             - Please double check al computed values and graphs. This is a weekend-project for me, thus I only do very limited testing.
@@ -230,7 +242,7 @@
 </template>
 
 <script>
-    let daysRelChange = 14
+    let daysRelChange = 20
     let daysCFR = 30
 
     let minCasesList = [0,500,1000,2000,5000, 10000];
@@ -241,6 +253,9 @@
     let githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
 
     let provincesAlwaysShow = ["Hong Kong", "Macau"]
+
+    // infectivity profile, according to: https://stochastik-tu-ilmenau.github.io/COVID-19/
+    let infectivity = [0., 0., 0.05555556, 0.11111111, 0.16666667, 0.16666667, 0.16666667, 0.13333333, 0.1, 0.06666667, 0.03333333, 0.]
 
     let urlPre = "";
     if (window.location.href.indexOf("github.io") >= 0) {
@@ -297,17 +312,49 @@
     function arrMean(arr, num, geom=false) {
       if (geom) {
         let prod = 1;
+        let count = 0;
         for (let i=dates.length-1; i>=dates.length-num; i--) {
-          prod *= arr[dates[i]];
+          if (!isNaN(arr[dates[i]]) && arr[dates[i]] != 0) {
+            prod *= arr[dates[i]];
+            count++;
+          }
         }
-        return Math.pow(prod, 1/num);
+        return Math.pow(prod, 1/count);
       } else {
         let sum = 0;
+        let count = 0;
         for (let i=dates.length-1; i>=dates.length-num; i--) {
-          sum += arr[dates[i]];
+          if (!isNaN(arr[dates[i]])) {
+            sum += arr[dates[i]];
+            count++;
+          }
         }
-        return sum/num;
+        return sum/count;
       }
+    }
+
+    // 1d convolution, see https://gist.github.com/jdpigeon/1de0b43eed7ae7e4080818cad53be200
+    function convolve(vec1, vec2) {
+      if (vec1.length === 0 || vec2.length === 0) {
+        throw new Error("Vectors can not be empty!");
+      }
+      const volume = vec1;
+      const kernel = vec2;
+      let displacement = 0;
+      const convVec = [];
+
+      for (let i = 0; i < volume.length; i++) {
+        for (let j = 0; j < kernel.length; j++) {
+          if (displacement + j !== convVec.length) {
+            convVec[displacement + j] =
+              convVec[displacement + j] + volume[i] * kernel[j];
+          } else {
+            convVec.push(volume[i] * kernel[j]);
+          }
+        }
+        displacement++;
+      }
+      return convVec;
     }
 
     // returns row
@@ -321,6 +368,7 @@
       let deathsChangeLast14 = {}; // deaths for last 14 days
       let casesLast14 = 0;
       let deathsLast14 = 0;
+      let repronum = {};
 
       for(let i=0;i<dates.length-1;i++) {
         // daily cases
@@ -356,6 +404,7 @@
         }  
       }
 
+      // CFR
       dates.forEach(function (item) {
         if (cases[item] > 0) {
           deceasedrelative[item] = deaths[item]  / cases[item];
@@ -364,18 +413,27 @@
         }
       });
 
-      let sparklinesdataentries = [];
-      let sparklinesdataentriesLast14 = [];
-      for (let i=dates.length-daysRelChange; i<dates.length; i++) {  // daysRelChange days of sparklines
-        sparklinesdataentries.push(casesChange[dates[i]])
-        sparklinesdataentriesLast14.push(casesChangeLast14[dates[i]])
+      // reproduction number
+      let casesdailyArr = Object.values(casesdaily);
+      let casesdailyKeys = Object.keys(casesdaily);
+      let sumtauwI = convolve(casesdailyArr, infectivity);
+      sumtauwI = sumtauwI.slice(infectivity.length-1, casesdailyArr.length);
+      sumtauwI = Array(casesdailyArr.length-sumtauwI.length).fill(NaN).concat(sumtauwI);  // prepend with NaNs to give equal length to cases
+      for (let i=0; i<casesdailyKeys.length; i++) {
+        if (sumtauwI[i] < 5 || casesdailyArr[i] < 5) {  // dont calculate reproduction number if there are too few cases
+          repronum[dates[i]] = NaN;
+        }
+        else {
+          repronum[casesdailyKeys[i]] = casesdailyArr[i] / sumtauwI[i];
+        }
       }
+
       let sparklinesdataTotal = {
         labels: dates.slice(dates.length-daysRelChange),
         datasets: [
           {
             label: country,
-            data: sparklinesdataentries
+            data: Object.values(casesChange).slice(dates.length-daysRelChange)
           }
         ]
       }
@@ -384,10 +442,19 @@
         datasets: [
           {
             label: country,
-            data: sparklinesdataentriesLast14
+            data: Object.values(casesChangeLast14).slice(dates.length-daysRelChange)
           }
         ]
       }
+      let sparklinesdataRepronum = {
+        labels: dates.slice(dates.length-daysRelChange),
+        datasets: [
+          {
+            label: country,
+            data: Object.values(repronum).slice(dates.length-daysRelChange)
+          }
+        ]
+      }      
 
       let sparklinescfrdataentries = [];
       for (let i=dates.length-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
@@ -407,28 +474,28 @@
         'dates': dates, 'country': country, 'isprovince': isprovince,
         'cases': cases, 'deaths': deaths, 'casesLatest': cases[latest], 'deathsLatest': deaths[latest],
 
-        'casesChange': casesChangeLast14, 'deathsChange': deathsChange,
+        'casesChange': casesChange, 'deathsChange': deathsChange,
         'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
         
-        'casesChangeLatest': casesChangeLast14[latest], 'casesChangeLatest3': arrMean(casesChangeLast14, 3), 'casesChangeLatest8': arrMean(casesChangeLast14, 8), 
+        'casesChangeLatest': casesChange[latest], 'casesChangeLatest3': arrMean(casesChange, 3), 'casesChangeLatest8': arrMean(casesChange, 8), 
         'deathsChangeLatest': deathsChange[latest], 'deathsChangeLatest3': arrMean(deathsChange, 3), 'deathsChangeLatest8': arrMean(deathsChange, 8),
 
         'deceasedrelative': deceasedrelative, 'deceasedrelativeLatest': deceasedrelative[latest],
         'deceasedrelativeLatest3': arrMean(deceasedrelative, 3),
         'deceasedrelativeLatest8': arrMean(deceasedrelative, 8), 
 
-        'sparklinesdata': JSON.parse(JSON.stringify(sparklinesdataLast14)), 'sparklinescfrdata': sparklinescfrdata,  // we need a deepc copy here to prevent pass-by-reference
+        'sparklinesdata': JSON.parse(JSON.stringify(sparklinesdataTotal)), 'sparklinescfrdata': sparklinescfrdata,  // we need a deepc copy here to prevent pass-by-reference
 
         'options': {
-          'casesChange': {'total': casesChange, '14day': casesChangeLast14},
-          'casesChangeLatest': {'total': casesChange[latest], '14day': casesChangeLast14[latest]}, 
-          'casesChangeLatest3': {'total': arrMean(casesChange, 3), '14day': arrMean(casesChangeLast14, 3)}, 
-          'casesChangeLatest8': {'total': arrMean(casesChange, 8), '14day': arrMean(casesChangeLast14, 8)}, 
-          'deathsChange': {'total': deathsChange, '14day': deathsChangeLast14},
-          'deathsChangeLatest': {'total': deathsChange[latest], '14day': deathsChangeLast14[latest]}, 
-          'deathsChangeLatest3': {'total': arrMean(deathsChange, 3), '14day': arrMean(deathsChangeLast14, 3)}, 
-          'deathsChangeLatest8': {'total': arrMean(deathsChange, 8), '14day': arrMean(deathsChangeLast14, 8)}, 
-          'sparklinesdata': {'total': sparklinesdataTotal, '14day': sparklinesdataLast14},
+          'casesChange': {'total': casesChange, '14day': casesChangeLast14, 'repronum': casesChange},
+          'casesChangeLatest': {'total': casesChange[latest], '14day': casesChangeLast14[latest], 'repronum': repronum[latest]},
+          'casesChangeLatest3': {'total': arrMean(casesChange, 3), '14day': arrMean(casesChangeLast14, 3), 'repronum': arrMean(repronum, 3)},
+          'casesChangeLatest8': {'total': arrMean(casesChange, 8), '14day': arrMean(casesChangeLast14, 8), 'repronum': arrMean(repronum, 8)},
+          'deathsChange': {'total': deathsChange, '14day': deathsChangeLast14, 'repronum': deathsChange},
+          'deathsChangeLatest': {'total': deathsChange[latest], '14day': deathsChangeLast14[latest], 'repronum': deathsChange[latest]}, 
+          'deathsChangeLatest3': {'total': arrMean(deathsChange, 3), '14day': arrMean(deathsChangeLast14, 3), 'repronum': arrMean(deathsChange, 3)}, 
+          'deathsChangeLatest8': {'total': arrMean(deathsChange, 8), '14day': arrMean(deathsChangeLast14, 8), 'repronum': arrMean(deathsChange, 8)},
+          'sparklinesdata': {'total': sparklinesdataTotal, '14day': sparklinesdataLast14, 'repronum': sparklinesdataRepronum},
         },
         'optionsObjects': {  // only copy subitems for these, otherwise the objects are references
           'sparklinesdata': ['datasets', 0, 'data'],
@@ -558,12 +625,13 @@
                 debug,
                 error,
                 latest,
-                increaseType: '14day',
+                increaseType: 'total',
                 showdetails: false,
                 showprovinces: false,
                 tooltipDelay: 650,
                 daysRelChange,
                 daysCFR,
+                infectivity,
                 sparklineUpdate,
                 sparklinestyles: {
                   height: '65px',
@@ -587,31 +655,14 @@
                       enabled: true,
                       mode: 'x-axis',
                       displayColors: false,
-                      callbacks: {
-                        label: function(tooltipItem) {
-                          let doublingStr = '';
-                          if (tooltipItem.yLabel <= 0) {
-                            doublingStr = '∞ d';
-                          }
-                          else {
-                            let doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
-                            if (doubling > 366) {
-                              doublingStr = '>1y';
-                            }
-                            else {
-                              doublingStr = numeral(doubling).format('0.0') + 'd';
-                            }
-                          }
-                          return numeral(tooltipItem.yLabel).format('0.0%') + ' / ' + doublingStr;
-                        }
-                      }
+                      callbacks: {}  // set in Sparkline.vue
                     },
                     scales: {
                       yAxes: [{
                           display: false,
                           ticks: {
-                            min: 0, max: 0.25,
-                            callback: function (value) { return numeral(value).format('0,0%') }
+                            min: 0, max: 0.25,  // will be set in Sparkline.vue again
+                            // callback: function (value) { return numeral(value).format('0.0%') }
                           }
                       }],
                       xAxes: [{
@@ -645,7 +696,7 @@
                           display: false,
                           ticks: {
                             min: 0, max: 0.135,
-                            callback: function (value) { return numeral(value).format('0,0%') }
+                            // callback: function (value) { return numeral(value).format('0.0%') }
                           }
                       }],
                       xAxes: [{
