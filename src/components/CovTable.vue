@@ -201,7 +201,7 @@
              <a href="https://stochastik-tu-ilmenau.github.io/COVID-19/">AG Stochastik, Technische Universität Ilmenau</a> is used.
           </li>
           <li>
-             - For the estimation of R, a daily infectivity profile of {{ infectivity }}
+             - For the estimation of R, a daily infectivity profile of
              <span v-for="item in infectivity" :key='item.index'> {{ item | numeral('0.0%') }} </span>
               is assumed.
           </li>
@@ -420,7 +420,7 @@
       sumtauwI = sumtauwI.slice(infectivity.length-1, casesdailyArr.length);
       sumtauwI = Array(casesdailyArr.length-sumtauwI.length).fill(NaN).concat(sumtauwI);  // prepend with NaNs to give equal length to cases
       for (let i=0; i<casesdailyKeys.length; i++) {
-        if (sumtauwI[i] < 5 || casesdailyArr[i] < 5) {  // dont calculate reproduction number if there are too few cases
+        if (sumtauwI[i] < 1 || casesdailyArr[i] < 1) {  // dont calculate reproduction number if there are too few cases
           repronum[dates[i]] = NaN;
         }
         else {
