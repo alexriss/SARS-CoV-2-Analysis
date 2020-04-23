@@ -420,7 +420,7 @@
       sumtauwI = sumtauwI.slice(infectivity.length-1, casesdailyArr.length);
       sumtauwI = Array(casesdailyArr.length-sumtauwI.length).fill(NaN).concat(sumtauwI);  // prepend with NaNs to give equal length to cases
       for (let i=0; i<casesdailyKeys.length; i++) {
-        if (sumtauwI[i] < 1 || casesdailyArr[i] < 1) {  // dont calculate reproduction number if there are too few cases
+        if (sumtauwI[i] < 0.1 || casesdailyArr[i] < 0) {  // dont calculate reproduction number if there are too few cases
           repronum[dates[i]] = NaN;
         }
         else {
@@ -433,7 +433,7 @@
         datasets: [
           {
             label: country,
-            data: Object.values(casesChange).slice(dates.length-daysRelChange)
+            data: Object.values(casesChange).slice(Object.values(casesChange).length-daysRelChange)
           }
         ]
       }
@@ -442,7 +442,7 @@
         datasets: [
           {
             label: country,
-            data: Object.values(casesChangeLast14).slice(dates.length-daysRelChange)
+            data: Object.values(casesChangeLast14).slice(Object.values(casesChangeLast14).length-daysRelChange)
           }
         ]
       }
@@ -451,10 +451,10 @@
         datasets: [
           {
             label: country,
-            data: Object.values(repronum).slice(dates.length-daysRelChange)
+            data: Object.values(repronum).slice(Object.values(repronum).length-daysRelChange)
           }
         ]
-      }      
+      }
 
       let sparklinescfrdataentries = [];
       for (let i=dates.length-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
