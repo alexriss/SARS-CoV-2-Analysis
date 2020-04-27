@@ -938,7 +938,7 @@
 .blue { color: blue; }
 .red { color:red; }
 
-.info { text-align:left; }
+.info { text-align:left; padding:20px;}
 
 .nowrap { white-space: nowrap; }
 
