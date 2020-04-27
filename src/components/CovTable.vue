@@ -215,7 +215,7 @@
 
                 <b-table-column field="deceasedrelativeLatest8" :label="'CFR* over ' + daysCFR + ' days'" :visible="columnsGraphsTemplate.deceasedrelativeLatest.visible" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
-                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the ratio of the total number of deceased cases divided by total number of confirmed cases.'">
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysCFRChange + '-day plot of the ratio of the total number of deceased cases divided by total number of confirmed cases.'">
                             CFR*<br />over {{ daysRelChange }} days
                         </b-tooltip>
                     </template> 
@@ -298,7 +298,7 @@
 </template>
 
 <script>
-    let daysRelChange = 20
+    let daysRelChange = 30
     let daysCFR = 30
 
     let minCasesList = [0,500,1000,2000,5000, 10000];
