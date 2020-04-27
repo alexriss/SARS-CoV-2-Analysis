@@ -6,7 +6,7 @@ const { reactiveProp } = mixins;
 export default {
   extends: Line,
   mixins: [reactiveProp],
-  props: ['chartData', 'options', 'update', 'increaseType'],
+  props: ['chartData', 'options'],
   mounted () {
     // todo: make gradient such that 2 week doubling time is a different color
     // let gradient = this.$refs.canvas.getContext('2d').createLinearGradient(0, 0, 0, 1)
@@ -23,6 +23,31 @@ export default {
         this.options.tooltips.callbacks['label'] = function(tooltipItem) {
               return numeral(tooltipItem.yLabel).format('0.00');
           }
+        this.addPlugin([]);
+      } else if (this.increaseType == '14day') {
+        this.options.scales.yAxes[0].ticks = {min: -1, max: 2};
+        this.options.tooltips.callbacks['label'] = function(tooltipItem) {
+              return numeral(tooltipItem.yLabel).format('+0.0%');
+          }
+        this.addPlugin({
+          id: 'colorAboveBelow0',
+          beforeDraw: function (x) {
+            var c = x.chart;
+            console.log(1);
+            var dataset = x.data.datasets[0];
+            var yScale = x.scales['y-axis-0'];
+            var yPos = yScale.getPixelForValue(0);
+
+            var gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
+            gradientFill.addColorStop(0, 'green');
+            gradientFill.addColorStop(yPos / c.height - 0.01, 'green');
+            gradientFill.addColorStop(yPos / c.height + 0.01, 'red');
+            gradientFill.addColorStop(1, 'red');
+
+            var model = x.data.datasets[0]._meta[Object.keys(dataset._meta)[0]].dataset._model;
+            model.backgroundColor = gradientFill;
+          }
+        });
       } else {
         this.options.scales.yAxes[0].ticks = {min: 0, max: 0.25};
         this.options.tooltips.callbacks['label'] = function(tooltipItem) {

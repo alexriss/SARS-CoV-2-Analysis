@@ -1,47 +1,61 @@
 <template>
-    <section class="section">
-        <b-field group-multiline>
-            <div class="control is-flex">
-            <div>
-              <b-tooltip :delay="tooltipDelay" multilined label="The increases show in the table and graphs can be calculated either with respect to the total number of previous cases or with respect to the cases within the last two weeks.">
-              <b-select v-model="increaseType" expanded icon="chart-area" @input='updateData()'>
-                  <option value="total">relative Increase</option>
-                  <option value="14day">2-week relative Increase</option>
-                  <option value="repronum">reproduction number</option>
-              </b-select>
-              </b-tooltip>
+    <section>
+        <b-collapse
+            aria-id="extraDetailsOptions"
+            class="panel"
+            animation="slide"
+            :open.sync="detailsOpen">
+            <div slot="trigger" class="panel-heading" role="button" aria-controls="extraDetailsOptions" style="margin-bottom:10px;">
+                <strong>Options</strong>
             </div>
-            <div style="width:70px;"></div>
+        <b-field grouped group-multiline>
+            <div class="field" style="margin-left:35px;">
               <b-tooltip :delay="tooltipDelay" multilined label="Only countries with this minimum number of cases will be shown.">
               <b-field label="Minimum number of confirmed cases">
               <b-slider :min="0" :max="5" aria-label="Fan" :tooltip="false" v-model="minCasesActive" @input='updateData()'>
-                  <b-slider-tick
-                      v-for="(item, index) in minCasesList"
-                      :key="index"
-                      :value="index"
-                  >{{ item }}</b-slider-tick>
+                  <b-slider-tick v-for="(item, index) in minCasesList" :key="index" :value="index">{{ item }}</b-slider-tick>
               </b-slider>
               </b-field> 
               </b-tooltip>
             </div>
-            <div style="width:70px;"></div>
-            <div class="field">
+            <div class="field" style="margin-left:35px;">
               <b-tooltip :delay="tooltipDelay" multilined label="Additionally show states and provinces in the list.">
               <b-checkbox v-model="showprovinces" @input='updateData()'>Show states/provinces</b-checkbox>
               </b-tooltip>
             </div>
-            <div style="width:70px;"></div>
-            <div class="field">
+            <div class="field" style="margin-left:35px;">
               <b-tooltip :delay="tooltipDelay" multilined label="Show extra in the list.">
               <b-checkbox v-model="showdetails">Extra details</b-checkbox>
               </b-tooltip>
             </div>
-            <!--
-            <div style='position:absolute; top:10px; left:10px;'>
-                <span class="minor blue" style="opacity:0.23;">data from {{ latest }} </span>
-            </div>
-            -->
         </b-field>
+        <div style="height:28px;"></div>
+        <b-field grouped group-multiline>
+            <b-tooltip :delay="tooltipDelay" multilined label="Choose which columns to show">
+            <div class="field" style="margin-left:35px; width:70px;"><b>Columns:</b></div>
+            </b-tooltip>
+            <div class="field" style="margin-left:20px;" v-for="(column, index) in columnsTemplate" :key="index">
+                <b-tooltip :delay="tooltipDelay" multilined :label="column.tooltip">
+                <b-checkbox v-model="column.visible">
+                    {{ column.title }}
+                </b-checkbox>
+                </b-tooltip>
+            </div>
+        </b-field>
+        <b-field grouped group-multiline>
+            <b-tooltip :delay="tooltipDelay" multilined label="Choose which graphs to show in the columns">
+            <div class="field" style="margin-left:35px; width:70px;"><b>Graphs:</b></div>
+            </b-tooltip>
+            <div class="field" style="margin-left:20px;" v-for="(column, index) in columnsGraphsTemplate" :key="index">
+                <b-tooltip :delay="tooltipDelay" multilined :label="column.tooltip">
+                <b-checkbox v-model="column.visible" v-if="column.show">
+                    {{ column.title }}
+                </b-checkbox>
+                </b-tooltip>
+            </div>
+        </b-field>
+        </b-collapse>
+
         <b-table
             :data="dataFiltered"
             :loading="loading"
@@ -51,7 +65,6 @@
             pagination-position="both"
             :detailed="true"
             narrowed
-            is-narrow
             :mobile-cards="false"
             hoverable
             detail-key="country"
@@ -66,13 +79,13 @@
             aria-previous-label="Previous page"
             aria-page-label="Page"
             aria-current-label="Current page"
-            style="min-width:600px;">
+            style="min-width:600px;width:94vw;">
 
             <template slot-scope="props">
-                <b-table-column field="country" label="Country" sortable searchable cell-class='countrycell'>
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='You can filter specific countries. Try to type "Germ|Spa" into the text field.'>
-                            {{ column.label }}
+                <b-table-column field="country" label="Country" sortable searchable cell-class='countrycell' :sticky='true'>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='You can filter specific countries. Try to type "Germ|Spa" into the text field.'>
+                            Country
                         </b-tooltip>
                     </template> 
                     <a @click="toggle(props.row)">
@@ -81,9 +94,9 @@
                 </b-table-column>
 
                 <b-table-column field="casesLatest" label="Confirmed" numeric sortable>
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='Total number and last-day increase of confirmed cases.'>
-                            {{ column.label }}
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of confirmed cases.'>
+                            Confirmed
                         </b-tooltip>
                     </template> 
                     <strong class='tablenumber'>{{ props.row.cases[latest] | numeral('0,0') }}</strong>
@@ -91,39 +104,82 @@
                     <span class="minorcolor">{{ props.row.casesdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
-                <b-table-column style="min-width:65px" field="casesChangeLatest" :label="(increaseType=='repronum') ? 'R' : 'Increase'" numeric sortable>
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases. This is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
-                            {{ column.label }}
+                <b-table-column field="casesChangeLatest" label="Increase" :visible="columnsTemplate.casesChangeLatest.visible" numeric sortable>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='The relative increase of the number of confirmed cases with respect to all confirmed cases.'>
+                            Increase
                         </b-tooltip>
                     </template> 
-                    <strong class="tablenumber" v-if="increaseType=='repronum'">{{ props.row.casesChangeLatest | numeral('0.00')}}</strong>
-                    <strong class="tablenumber" v-if="increaseType!='repronum'">{{ props.row.casesChangeLatest | numeral('+0.0%')}}</strong>
-                    <span class="minor" v-if="showdetails && increaseType=='repronum'">
-                    <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('0.00')}}
-                    <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('0.00')}}
-                    </span>
-                    <span class="minor" v-if="showdetails && increaseType!='repronum'">
+                    <strong class="tablenumber">{{ props.row.casesChangeLatest | numeral('+0.0%')}}</strong>
+                    <span class="nowrap minor" v-if="showdetails">
                     <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('+0.0%')}}
                     <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
-                
-                <b-table-column field="casesChangeLatest8" :label="(increaseType=='repronum') ? 'R over ' + daysRelChange + ' days' : 'Increase over ' + daysRelChange + ' days'" numeric sortable centered>
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of confirmed cases within the last 14 days. Again, this is either with respect to all confirmed cases or with respect to the number of cases observed within the last two weeks.'>
-                            {{ column.label }}
+
+                <b-table-column field="casesChangeLatest8" :label="'Increase over ' + daysRelChange + ' days'" :visible="columnsGraphsTemplate.casesChangeLatest.visible" numeric sortable centered>
+                    <template slot="header"> <!--  slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the relative increase of the number of confirmed cases with respect to all confirmed cases.'">
+                            Increase<br /> over {{ daysRelChange }} days
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinesdata' :options='sparklineoptions' :styles='sparklinestyles' :update='sparklineUpdate' :increase-type='increaseType' />
+                    <sparkline :chart-data='props.row.sparklinesData' :options='sparklineOptions' :styles='sparklineStyles' />
+                  </div>
+                </b-table-column>
+                
+                <b-table-column field="casesChangeLast14Latest" label="w/w increase" :visible="columnsTemplate.casesChangeLast14Latest.visible" numeric sortable>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Increase over last 7 days relative to the 7 days before.'>
+                            w/w<br />increase
+                        </b-tooltip>
+                    </template> 
+                    <strong class="tablenumber">{{ props.row.casesChangeLast14Latest | numeral('+0.0%')}}</strong>
+                    <span class="nowrap minor" v-if="showdetails">
+                    <br />3d avg: {{ props.row.casesChangeLast14Latest3 | numeral('+0.0%')}}
+                    <br />8d avg: {{ props.row.casesChangeLast14Latest8 | numeral('+0.0%')}}
+                    </span>
+                </b-table-column>
+
+                <b-table-column field="casesChangeLast14Latest8" :label="'w/w increase over ' + daysRelChange + ' days'" :visible="columnsGraphsTemplate.casesChangeLast14Latest.visible" numeric sortable centered>
+                    <template slot="header"> <!--  slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the increase over 7 days relative to the 7 days before.'">
+                             w/w increase<br /> over {{ daysRelChange }} days
+                        </b-tooltip>
+                    </template> 
+                  <div style='width:200px;height:65px;margin:auto;'>
+                    <sparkline :chart-data='props.row.sparklinesLast14Data' :options='sparklineLast14Options' :plugins='sparklineLast14Plugins' :styles='sparklineStyles' />
+                  </div>
+                </b-table-column>
+                
+                <b-table-column field="repronumLatest" label="R" :visible="columnsTemplate.repronumLatest.visible" numeric sortable>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Effective reproduction number.'>
+                           R
+                        </b-tooltip>
+                    </template> 
+                    <strong class="tablenumber">{{ props.row.repronumLatest | numeral('0.00')}}</strong>
+                    <span class="nowrap minor" v-if="showdetails">
+                    <br />3d avg: {{ props.row.repronumLatest3 | numeral('0.00')}}
+                    <br />8d avg: {{ props.row.repronumLatest8 | numeral('0.00')}}
+                    </span>
+                </b-table-column>
+
+                <b-table-column field="repronumLatest8" :label="'R over ' + daysRelChange + ' days'" :visible="columnsGraphsTemplate.repronumLatest.visible" numeric sortable centered>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the effective reproduction number.'">
+                            R<br />over {{ daysRelChange }} days
+                        </b-tooltip>
+                    </template> 
+                  <div style='width:200px;height:65px;margin:auto;'>
+                    <sparkline :chart-data='props.row.sparklinesRepronumData' :options='sparklineRepronumOptions' :plugins='sparklineRepronumPlugins' :styles='sparklineStyles' />
                   </div>
                 </b-table-column>
 
-                <b-table-column field="deathsLatest" label="Deceased" numeric sortable header-class='redhead' cell-class='redcell'>
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='Total number and last-day increase of deceased people.'>
-                            {{ column.label }}
+                <b-table-column field="deathsLatest" label="Deceased" :visible="columnsTemplate.deathsLatest.visible" numeric sortable header-class='redhead' cell-class='redcell'>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of deceased people.'>
+                            Deceased
                         </b-tooltip>
                     </template> 
                     <strong class='tablenumber'>{{ props.row.deaths[latest] | numeral('0,0') }}</strong>
@@ -131,40 +187,40 @@
                     <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
 
-                <b-table-column field="deathsChangeLatest" label="Increase " numeric sortable header-class='redhead' cell-class='redcell' >
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='The relative increase of the number of deceased people. This is either with respect to all deceased cases or with respect to the number of deceased cases within the last two weeks.'>
-                            {{ column.label }}
+                <b-table-column field="deathsChangeLatest" label="Increase " :visible="columnsTemplate.deathsChangeLatest.visible" numeric sortable header-class='redhead' cell-class='redcell' >
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='The relative increase of the number of deceased people.'>
+                            Deceased<br />increase
                         </b-tooltip>
                     </template> 
                     {{ props.row.deathsChange[latest] | numeral('+0.0%')}}
-                    <span class="minor" v-if="showdetails">
+                    <span class="nowrap minor" v-if="showdetails">
                     <br />3d avg: {{ props.row.deathsChangeLatest3 | numeral('+0.0%')}}
                     <br />8d avg: {{ props.row.deathsChangeLatest8 | numeral('+0.0%')}}
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativeLatest" label="CFR*" numeric sortable header-class='orangehead' cell-class='orangecell' >
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='CFR* is calculated by the ratio of the current total number of deceased cases divided by current total number of confirmed cases.'>
-                            {{ column.label }}
+                <b-table-column field="deceasedrelativeLatest" label="CFR*" :visible="columnsTemplate.deceasedrelativeLatest.visible" numeric sortable header-class='orangehead' cell-class='orangecell' >
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='CFR* is calculated by the ratio of the current total number of deceased cases divided by current total number of confirmed cases.'>
+                            CFR*
                         </b-tooltip>
                     </template> 
                     {{ props.row.deceasedrelative[latest] | numeral('0.0%')}}
-                    <span class="minor" v-if="showdetails">
+                    <span class="nowrap minor" v-if="showdetails">
                     <br />3d avg: {{ props.row.deceasedrelativeLatest3 | numeral('0.0%')}}
                     <br />8d avg: {{ props.row.deceasedrelativeLatest8| numeral('0.0%')}}
                     </span>
                 </b-table-column>
 
-                <b-table-column field="deceasedrelativeLatest8" :label="'CFR* over ' + daysCFR + ' days'" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
-                    <template slot="header" slot-scope="{ column }">
-                        <b-tooltip :delay="tooltipDelay" multilined label='The ratio of the current total number of deceased cases divided by current total number of confirmed cases. Shown over the last 30 days.'>
-                            {{ column.label }}
+                <b-table-column field="deceasedrelativeLatest8" :label="'CFR* over ' + daysCFR + ' days'" :visible="columnsGraphsTemplate.deceasedrelativeLatest.visible" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the ratio of the total number of deceased cases divided by total number of confirmed cases.'">
+                            CFR*<br />over {{ daysRelChange }} days
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinescfrdata' :options='sparklinecfroptions' :styles='sparklinestyles' :update='0' increase-Type='total' />
+                    <sparkline :chart-data='props.row.sparklinesCfrData' :options='sparklineCfrOptions' :styles='sparklineStyles' />
                   </div>
 
                 </b-table-column>
@@ -270,8 +326,6 @@
     let csvC = readTextFile(urlPre + csvConfirmed);
     console.log("loading "+ urlPre + csvDeceased);
     let csvD = readTextFile(urlPre + csvDeceased);
-
-    let sparklineUpdate = 0;
 
     import numeral from 'numeral'
     import Sparkline from '@/components/Sparkline.vue'
@@ -386,30 +440,34 @@
         } else {
           deathsChange[dates[i+1]] = 0;
         }
-
-        // daily change with respect to sum of cases within last 14 days
-        if (i >= 14) {
-          casesLast14 = cases[dates[i]] - cases[dates[i-14]];
-          deathsLast14 = deaths[dates[i]] - deaths[dates[i-14]];
-        } else {
-          casesLast14 = cases[dates[i]];
-          deathsLast14 = deaths[dates[i]];
-        }
-        if (casesLast14 > 0) {
-          casesChangeLast14[dates[i+1]] = casesdaily[dates[i+1]] / casesLast14;
-          deathsChangeLast14[dates[i+1]] = deathsdaily[dates[i+1]] / deathsLast14;
-        } else {
-          casesChangeLast14[dates[i+1]] = 0;
-          casesChangeLast14[dates[i+1]] = 0;
-        }  
       }
 
-      // CFR
-      dates.forEach(function (item) {
+      // CFR* and 7/7 relative change
+      dates.forEach(function (item, i) {
+        // CFR*
         if (cases[item] > 0) {
           deceasedrelative[item] = deaths[item]  / cases[item];
         } else {
           deceasedrelative[item] = 0;
+        }
+
+        // 7/7 relative change
+        if (i >= 14) {
+          casesLast14 = cases[dates[i-7]] - cases[dates[i-14]];
+          deathsLast14 = deaths[dates[i-7]] - deaths[dates[i+1-14]];
+        } else {
+          casesLast14 = NaN;
+          deathsLast14 = NaN;
+        }
+        if (casesLast14 > 0) {
+          casesChangeLast14[item] = (cases[item] - cases[dates[i-7]]) / casesLast14 - 1;
+        } else {
+          casesChangeLast14[dates[i+1]] = NaN;
+        }
+        if (deathsLast14 > 0) {
+          deathsChangeLast14[item] = (deaths[item] - deaths[dates[i-7]]) / deathsLast14 - 1;
+        } else {
+          deathsChangeLast14[dates[i+1]] = NaN;
         }
       });
 
@@ -478,28 +536,16 @@
         'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
         
         'casesChangeLatest': casesChange[latest], 'casesChangeLatest3': arrMean(casesChange, 3), 'casesChangeLatest8': arrMean(casesChange, 8), 
+        'casesChangeLast14Latest': casesChangeLast14[latest], 'casesChangeLast14Latest3': arrMean(casesChangeLast14, 3), 'casesChangeLast14Latest8': arrMean(casesChangeLast14, 8),
+        'repronumLatest': repronum[latest], 'repronumLatest3': arrMean(repronum, 3), 'repronumLatest8': arrMean(repronum, 8),
+
         'deathsChangeLatest': deathsChange[latest], 'deathsChangeLatest3': arrMean(deathsChange, 3), 'deathsChangeLatest8': arrMean(deathsChange, 8),
 
         'deceasedrelative': deceasedrelative, 'deceasedrelativeLatest': deceasedrelative[latest],
         'deceasedrelativeLatest3': arrMean(deceasedrelative, 3),
         'deceasedrelativeLatest8': arrMean(deceasedrelative, 8), 
 
-        'sparklinesdata': JSON.parse(JSON.stringify(sparklinesdataTotal)), 'sparklinescfrdata': sparklinescfrdata,  // we need a deepc copy here to prevent pass-by-reference
-
-        'options': {
-          'casesChange': {'total': casesChange, '14day': casesChangeLast14, 'repronum': casesChange},
-          'casesChangeLatest': {'total': casesChange[latest], '14day': casesChangeLast14[latest], 'repronum': repronum[latest]},
-          'casesChangeLatest3': {'total': arrMean(casesChange, 3), '14day': arrMean(casesChangeLast14, 3), 'repronum': arrMean(repronum, 3)},
-          'casesChangeLatest8': {'total': arrMean(casesChange, 8), '14day': arrMean(casesChangeLast14, 8), 'repronum': arrMean(repronum, 8)},
-          'deathsChange': {'total': deathsChange, '14day': deathsChangeLast14, 'repronum': deathsChange},
-          'deathsChangeLatest': {'total': deathsChange[latest], '14day': deathsChangeLast14[latest], 'repronum': deathsChange[latest]}, 
-          'deathsChangeLatest3': {'total': arrMean(deathsChange, 3), '14day': arrMean(deathsChangeLast14, 3), 'repronum': arrMean(deathsChange, 3)}, 
-          'deathsChangeLatest8': {'total': arrMean(deathsChange, 8), '14day': arrMean(deathsChangeLast14, 8), 'repronum': arrMean(deathsChange, 8)},
-          'sparklinesdata': {'total': sparklinesdataTotal, '14day': sparklinesdataLast14, 'repronum': sparklinesdataRepronum},
-        },
-        'optionsObjects': {  // only copy subitems for these, otherwise the objects are references
-          'sparklinesdata': ['datasets', 0, 'data'],
-        }
+        'sparklinesData': sparklinesdataTotal, 'sparklinesLast14Data': sparklinesdataLast14, 'sparklinesRepronumData': sparklinesdataRepronum, 'sparklinesCfrData': sparklinescfrdata, 
       }
     }
 
@@ -625,20 +671,33 @@
                 debug,
                 error,
                 latest,
-                increaseType: 'total',
                 showdetails: false,
                 showprovinces: false,
                 tooltipDelay: 650,
+                detailsOpen: false,
                 daysRelChange,
                 daysCFR,
                 infectivity,
-                sparklineUpdate,
-                sparklinestyles: {
+                columnsTemplate: {
+                    casesChangeLatest: { title: 'Confirmed Increase', visible: false, tooltip: 'Increase relative to all confirmed cases' },
+                    casesChangeLast14Latest: { title: 'Week/week increase', visible: true, tooltip: 'Increase over last 7 days relative to the 7 days before'},
+                    repronumLatest: { title: 'R', visible: false, tooltip: 'Effective reproduction number'},
+                    deathsLatest: { title: 'Deceased', visible: true, tooltip: 'Total number of confirmed deceased cases'},
+                    deathsChangeLatest: { title: 'Deceased Increase', visible: true, tooltip: 'Increased of confirmed deceased cases'},
+                    deceasedrelativeLatest: { title: 'CFR*', visible: true, tooltip: 'Ratio between all confirmed deceased cases to all confirmed cases'},
+                },
+                columnsGraphsTemplate: {
+                    casesChangeLatest: { title: 'Confirmed Increase', visible: false, show: true, tooltip: 'Plot of daily increase relative to confirmed cases over time' },
+                    casesChangeLast14Latest: { title: 'Week/week increase', visible: true, show: true, tooltip: 'Plot of increase over last 7 days relative to the 7 days before' },
+                    repronumLatest: { title: 'R', visible: false, show: true, tooltip: 'Plot of the effective reproduction number over time'},
+                    deceasedrelativeLatest: { title: 'CFR*', visible: true, show: true, tooltip: 'Plot of the ratio between all confirmed deceased cases to all confirmed cases over time'},
+                },
+                sparklineStyles: {
                   height: '65px',
                   width: '100%',
                   position: 'relative',
                 },
-                sparklineoptions: {
+                sparklineOptions: {
                     responsive: true,
                     maintainAspectRatio: false,
                     legend: { display: false },
@@ -655,13 +714,28 @@
                       enabled: true,
                       mode: 'x-axis',
                       displayColors: false,
-                      callbacks: {}  // set in Sparkline.vue
+                      callbacks: { label: function(tooltipItem) {
+                          let doublingStr = '';
+                          if (tooltipItem.yLabel <= 0) {
+                            doublingStr = '∞ d';
+                          }
+                          else {
+                            let doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
+                            if (doubling > 366) {
+                              doublingStr = '>1y';
+                            }
+                            else {
+                              doublingStr = numeral(doubling).format('0.0') + 'd';
+                            }
+                          }
+                          return numeral(tooltipItem.yLabel).format('0.0%') + ' / ' + doublingStr;
+                      }}
                     },
                     scales: {
                       yAxes: [{
                           display: false,
                           ticks: {
-                            min: 0, max: 0.25,  // will be set in Sparkline.vue again
+                            min: 0, max: 0.25,
                             // callback: function (value) { return numeral(value).format('0.0%') }
                           }
                       }],
@@ -670,7 +744,111 @@
                       }]
                     }
                 },
-                sparklinecfroptions: {
+                sparklineLast14Options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    elements: {
+                      point: { radius: 0 },
+                      line: { 
+                        tension: 0,
+                        backgroundColor: '#3179bd',
+                        borderColor: '#3179bd',
+                        fill: true,
+                      }
+                    },
+                    tooltips: {
+                      enabled: true,
+                      mode: 'x-axis',
+                      displayColors: false,
+                      callbacks: { label: function(tooltipItem) {
+                        return numeral(tooltipItem.yLabel).format('+0.0%');
+                      }}
+                    },
+                    scales: {
+                      yAxes: [{
+                          display: false,
+                          ticks: {
+                            min: -1, max: 2,
+                            // callback: function (value) { return numeral(value).format('0.0%') }
+                          }
+                      }],
+                      xAxes: [{
+                          display: false,
+                          ticks: { display: false },
+                          gridLines: { display: false	}
+                      }]
+                    },
+                },
+                sparklineLast14Plugins: [{
+                        id: 'colorAboveBelow0',
+                        beforeDraw: function (x) {
+                          let c = x.chart;
+                          let dataset = x.data.datasets[0];
+                          let yScale = x.scales['y-axis-0'];
+                          let yPos = yScale.getPixelForValue(0);
+                          let gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
+                          gradientFill.addColorStop(0, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height - 0.01, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height + 0.01, '#51a9cd');
+                          gradientFill.addColorStop(1, '#51a9cd');
+                          let model = x.data.datasets[0]._meta[Object.keys(dataset._meta)[0]].dataset._model;
+                          model.backgroundColor = gradientFill;
+                          model.borderColor = gradientFill;
+                        }
+                }],
+                sparklineRepronumOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    elements: {
+                      point: { radius: 0 },
+                      line: { 
+                        tension: 0,
+                        backgroundColor: '#3179bd',
+                        borderColor: '#3179bd',
+                        fill: true,
+                      }
+                    },
+                    tooltips: {
+                      enabled: true,
+                      mode: 'x-axis',
+                      displayColors: false,
+                      callbacks: { label: function(tooltipItem) {
+                        return numeral(tooltipItem.yLabel).format('0.00');
+                      }}
+                    },
+                    scales: {
+                      yAxes: [{
+                          display: false,
+                          ticks: {
+                            min: 0, max: 4,
+                            // callback: function (value) { return numeral(value).format('0.0%') }
+                          }
+                      }],
+                      xAxes: [{
+                          display: false
+                      }]
+                    }
+                },
+                sparklineRepronumPlugins: [{
+                        id: 'colorAboveBelow0',
+                        beforeDraw: function (x) {
+                          let c = x.chart;
+                          let dataset = x.data.datasets[0];
+                          let yScale = x.scales['y-axis-0'];
+                          let yPos = yScale.getPixelForValue(1);
+                          let gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
+                          gradientFill.addColorStop(0, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height - 0.01, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height + 0.01, '#51a9cd');
+                          gradientFill.addColorStop(1, '#51a9cd');
+                          let model = x.data.datasets[0]._meta[Object.keys(dataset._meta)[0]].dataset._model;
+                          model.backgroundColor = gradientFill;
+                          model.borderColor = gradientFill;
+                        }
+                }],
+                sparklineCfrOptions: {
                     responsive: true,
                     maintainAspectRatio: false,
                     legend: { display: false },
@@ -720,36 +898,19 @@
               await new Promise(r => setTimeout(r, 200));  // wait a bit, because user might still be changing the values
 
               let dataNew = [];
-              let increaseType = this.increaseType;
               for (let i=0; i<this.data.length; i++) {
                 if (this.timeDataChange != currDate) {  // some other update occured
                   return false;
                 }
                 if (!this.data[i]['isprovince'] || this.showprovinces) {  // provinces 
                   if (this.data[i]['cases'][latest] > minCases) {  // mincases
-                    let d = this.data[i];
-                    Object.keys(d['options']).forEach(function(key) {  // 14day or total increase type
-                      if (key in d['optionsObjects']) {  // we only set a specific sub-object, otherweise we get problems with pass-by-reference
-                        let objGet = d['options'][key][increaseType];
-                        let objSet = d[key];
-                        let pList = d['optionsObjects'][key];  // array that contains the sub-keys
-                        for (let j=0; j < pList.length-1; j++) {
-                          objGet = objGet[pList[j]];
-                          objSet = objSet[pList[j]];
-                        }
-                        objSet[pList[pList.length-1]] = objGet[pList[pList.length-1]].slice();
-                      } else {
-                        d[key] = d['options'][key][increaseType];
-                      }
-                    });
-                    dataNew.push(d);
+                    dataNew.push(this.data[i]);
                   }
                 }
               }
 
               if (this.timeDataChange == currDate) {  // some other update occured
                 this.dataFiltered = dataNew;
-                this.sparklineUpdate = new Date().getTime();
                 this.loading = false;
               }
             },
@@ -778,6 +939,8 @@
 .red { color:red; }
 
 .info { text-align:left; }
+
+.nowrap { white-space: nowrap; }
 
 strong.tablenumber { font-size:110%; }
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="app" style="max-width:1400px;">
+  <div id="app">
     <h1 class="title">SARS-CoV-2 Analysis</h1>
     <h2 class="subtitle">Relative coronavirus numbers <span class="tag is-info">beta</span></h2>
     <CovTable />

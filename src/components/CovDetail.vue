@@ -8,7 +8,7 @@
 const seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed increase', 'deceased increase'];
 const formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%'];
 const extraSpaceAfter = [2, 4];  // add extra spacer in the tooltip after those indices of seriesNames
-const runningAverage = 12;  // running average over this many points for daily cases chart
+const runningAverage = 11;  // running average over this many points for daily cases chart
 
 import numeral from 'numeral'
 numeral.locale('en');
@@ -27,10 +27,19 @@ import "echarts/lib/component/axisPointer";
 
 
 // calculate running average
-function movingAvg(arrayOrig, count, zeroToNan=true){
+function movingAvg(arrayOrig, count, zeroToNan=true, weighted=false){
     let array = [...arrayOrig];  // clone array, otherwise we will alter the one input here
     let extraEnd = Math.round(count/2);
     let extraStart = count - extraEnd;
+    let weightVec = [];
+
+    if (weighted) {  // Gaussian weight function
+       weightVec = Array(count).fill().map((_, i) => Math.exp(-1.0 * ((i-extraStart)/(count/4))**2));  // sigma of count/8
+       let sum = weightVec.reduce((a,b) => a + b, 0);
+       weightVec = weightVec.map((x) => x/sum);  // sigma of count/2
+    } else {
+       weightVec = Array(count).fill(1/count);
+    }
 
     // expand by constant values
     array.unshift(...Array(extraStart).fill(array[0]))
@@ -39,29 +48,29 @@ function movingAvg(arrayOrig, count, zeroToNan=true){
     for (let i = extraStart; i < array.length-extraEnd; i++)
     {
         let sum = 0;
-        for (let j = i - extraStart; j < i + extraEnd; j++) {
-            sum += array[j];
+        for (let j = 0; j < extraStart + extraEnd; j++) {
+            sum += array[i + j - extraStart] * weightVec[j];
         }
         if (zeroToNan && sum == 0) {
             arrayAvg.push(NaN);
         } else {
-            arrayAvg.push(sum/count);
+            arrayAvg.push(sum);
         }
     }
     return arrayAvg;
 }
 
 function splitData(rowdata) {
-  var dates = rowdata['dates'];
-  var cases = [];
-  var deaths = [];
-  var casesdaily = [0];
-  var deathsdaily = [0];
-  var casesChange = [0];
-  var deathsChange = [0];
-  var deceasedrelative = []
+  let dates = rowdata['dates'];
+  let cases = [];
+  let deaths = [];
+  let casesdaily = [0];
+  let deathsdaily = [0];
+  let casesChange = [0];
+  let deathsChange = [0];
+  let deceasedrelative = []
 
-  for (var i = 0; i < dates.length; i++) {
+  for (let i = 0; i < dates.length; i++) {
     if (rowdata["cases"][dates[i]] > 0) {  // we dont want zeros for log plots
       cases.push(rowdata["cases"][dates[i]]);
     } else {
@@ -101,7 +110,7 @@ export default {
   },
   props: ['chartData'],
   data() {
-    var splitChartData = splitData(this.chartData);
+    let splitChartData = splitData(this.chartData);
     return {
         country: this.chartData.country,
         initOptions: {
