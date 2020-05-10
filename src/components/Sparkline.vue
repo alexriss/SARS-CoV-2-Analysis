@@ -1,10 +1,37 @@
 <script>
-import numeral from 'numeral'
-import { Line, mixins } from 'vue-chartjs';
+import Chart from 'chart.js';
+import { generateChart, mixins } from 'vue-chartjs';
+
+Chart.defaults.LineWithLine = Chart.defaults.line;
+Chart.controllers.LineWithLine = Chart.controllers.line.extend({
+  draw: function(ease) {
+      Chart.controllers.line.prototype.draw.call(this, ease);
+
+      if (this.chart.tooltip._active && this.chart.tooltip._active.length) {
+         var activePoint = this.chart.tooltip._active[0],
+             ctx = this.chart.ctx,
+             x = activePoint.tooltipPosition().x,
+             topY = this.chart.scales['y-axis-0'].top,
+             bottomY = this.chart.scales['y-axis-0'].bottom;
+
+         // draw line
+         ctx.save();
+         ctx.beginPath();
+         ctx.moveTo(x, topY);
+         ctx.lineTo(x, bottomY);
+         ctx.lineWidth = 2;
+         ctx.strokeStyle = 'rgba(128,128,128,0.33)'; // '#aaa';
+         ctx.stroke();
+         ctx.restore();
+      }
+  }
+})
+const CustomLine = generateChart('custom-line', 'LineWithLine')
+
 const { reactiveProp } = mixins;
 
 export default {
-  extends: Line,
+  extends: CustomLine,
   mixins: [reactiveProp],
   props: ['chartData', 'options'],
   mounted () {
@@ -16,60 +43,6 @@ export default {
     // this.chartData.datasets[0].backgroundColor = gradient;
     this.renderChart(this.chartData, this.options);
   },
-  watch: {
-    update: function() {
-      if (this.increaseType == 'repronum') {
-        this.options.scales.yAxes[0].ticks = {min: 0, max: 4};
-        this.options.tooltips.callbacks['label'] = function(tooltipItem) {
-              return numeral(tooltipItem.yLabel).format('0.00');
-          }
-        this.addPlugin([]);
-      } else if (this.increaseType == '14day') {
-        this.options.scales.yAxes[0].ticks = {min: -1, max: 2};
-        this.options.tooltips.callbacks['label'] = function(tooltipItem) {
-              return numeral(tooltipItem.yLabel).format('+0.0%');
-          }
-        this.addPlugin({
-          id: 'colorAboveBelow0',
-          beforeDraw: function (x) {
-            var c = x.chart;
-            console.log(1);
-            var dataset = x.data.datasets[0];
-            var yScale = x.scales['y-axis-0'];
-            var yPos = yScale.getPixelForValue(0);
-
-            var gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
-            gradientFill.addColorStop(0, 'green');
-            gradientFill.addColorStop(yPos / c.height - 0.01, 'green');
-            gradientFill.addColorStop(yPos / c.height + 0.01, 'red');
-            gradientFill.addColorStop(1, 'red');
-
-            var model = x.data.datasets[0]._meta[Object.keys(dataset._meta)[0]].dataset._model;
-            model.backgroundColor = gradientFill;
-          }
-        });
-      } else {
-        this.options.scales.yAxes[0].ticks = {min: 0, max: 0.25};
-        this.options.tooltips.callbacks['label'] = function(tooltipItem) {
-              let doublingStr = '';
-              if (tooltipItem.yLabel <= 0) {
-                doublingStr = '∞ d';
-              }
-              else {
-                let doubling = 1/(Math.log(1 + tooltipItem.yLabel)/Math.log(2));
-                if (doubling > 366) {
-                  doublingStr = '>1y';
-                }
-                else {
-                  doublingStr = numeral(doubling).format('0.0') + 'd';
-                }
-              }
-              return numeral(tooltipItem.yLabel).format('0.0%') + ' / ' + doublingStr;
-          }
-      }
-      this.renderChart(this.chartData, this.options);
-    }
-  }
 }
 </script>
 

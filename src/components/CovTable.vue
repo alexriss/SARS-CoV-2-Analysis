@@ -61,7 +61,7 @@
             :loading="loading"
             ref="table"
             paginated
-            per-page="30"
+            per-page="50"
             pagination-position="both"
             :detailed="true"
             narrowed
@@ -215,7 +215,7 @@
 
                 <b-table-column field="deceasedrelativeLatest8" :label="'CFR* over ' + daysCFR + ' days'" :visible="columnsGraphsTemplate.deceasedrelativeLatest.visible" numeric sortable centered header-class='orangehead' cell-class='orangecell' >
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
-                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysCFRChange + '-day plot of the ratio of the total number of deceased cases divided by total number of confirmed cases.'">
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysCFR + '-day plot of the ratio of the total number of deceased cases divided by total number of confirmed cases.'">
                             CFR*<br />over {{ daysRelChange }} days
                         </b-tooltip>
                     </template> 
@@ -298,8 +298,8 @@
 </template>
 
 <script>
-    let daysRelChange = 30
-    let daysCFR = 30
+    let daysRelChange = 60
+    let daysCFR = 60
 
     let minCasesList = [0,500,1000,2000,5000, 10000];
     let minCasesActive = 3; // index
@@ -549,6 +549,65 @@
       }
     }
 
+    const customTooltip = function(tooltipModel) {
+        var tooltipEl = document.getElementById('chartjs-tooltip');
+
+        // Create element on first render
+        if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.id = 'chartjs-tooltip';
+            tooltipEl.innerHTML = '<div></div>';
+            document.body.appendChild(tooltipEl);
+        }
+
+        // Hide if no tooltip
+        if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = 0;
+            return;
+        }
+
+        function getBody(bodyItem) {
+            return bodyItem.lines;
+        }
+
+        // Set Text
+        if (tooltipModel.body) {
+            var titleLines = tooltipModel.title || [];
+            var bodyLines = tooltipModel.body.map(getBody);
+
+            var innerHtml = '';
+
+            titleLines.forEach(function(title) {
+                innerHtml += '<b>' + title.substring(5) + ':</b>';
+            });
+
+            bodyLines.forEach(function(body) {
+                innerHtml += body;
+            });
+
+            var tableRoot = tooltipEl.querySelector('div');
+            tableRoot.innerHTML = innerHtml;
+        }
+
+        // `this` will be the overall tooltip
+        var position = this._chart.canvas.getBoundingClientRect();
+
+        // Display, position, and set styles for font
+        tooltipEl.style.opacity = 1;
+        tooltipEl.style.position = 'absolute';
+        //tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+        tooltipEl.style.left = position.left + window.pageXOffset + 0 + 'px';
+        //tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
+        tooltipEl.style.top = position.top + window.pageYOffset + 'px';
+        tooltipEl.style.fontFamily = tooltipModel._bodyFontFamily;
+        tooltipEl.style.fontSize = tooltipModel.bodyFontSize + 'px';
+        tooltipEl.style.fontStyle = tooltipModel._bodyFontStyle;
+        //tooltipEl.style.padding = tooltipModel.yPadding + 'px ' + tooltipModel.xPadding + 'px';
+        tooltipEl.style.padding = '0px 0px';
+        tooltipEl.style.pointerEvents = 'none';
+    }
+
+
     let debug = [];
     let error = [];
 
@@ -650,7 +709,7 @@
 
     // make initial fitlered data, afterwards it will be updated in the fucntion "updateData"
     for (let i=0; i<data.length; i++) {
-      if (data[i]['cases'][latest] > 1000) {
+      if (data[i]['cases'][latest] > minCasesList[minCasesActive]) {
         dataFiltered.push(data[i]);
       }
     }
@@ -711,9 +770,10 @@
                       }
                     },
                     tooltips: {
-                      enabled: true,
+                      enabled: false,  // we use the custom tooltip
                       mode: 'x-axis',
                       displayColors: false,
+                      custom: customTooltip,
                       callbacks: { label: function(tooltipItem) {
                           let doublingStr = '';
                           if (tooltipItem.yLabel <= 0) {
@@ -758,9 +818,10 @@
                       }
                     },
                     tooltips: {
-                      enabled: true,
+                      enabled: false,  // we use the custom tooltip
                       mode: 'x-axis',
                       displayColors: false,
+                      custom: customTooltip,
                       callbacks: { label: function(tooltipItem) {
                         return numeral(tooltipItem.yLabel).format('+0.0%');
                       }}
@@ -811,9 +872,10 @@
                       }
                     },
                     tooltips: {
-                      enabled: true,
+                      enabled: false,  // we use the custom tooltip
                       mode: 'x-axis',
                       displayColors: false,
+                      custom: customTooltip,
                       callbacks: { label: function(tooltipItem) {
                         return numeral(tooltipItem.yLabel).format('0.00');
                       }}
@@ -862,9 +924,10 @@
                       }
                     },
                     tooltips: {
-                      enabled: true,
+                      enabled: false,  // we use the custom tooltip
                       mode: 'x-axis',
                       displayColors: false,
+                      custom: customTooltip,
                       callbacks: {
                           label: function(tooltipItem) { return numeral(tooltipItem.yLabel).format('0.0%'); }
                       }
@@ -873,7 +936,7 @@
                       yAxes: [{
                           display: false,
                           ticks: {
-                            min: 0, max: 0.135,
+                            min: 0, max: 0.16,
                             // callback: function (value) { return numeral(value).format('0.0%') }
                           }
                       }],
@@ -948,5 +1011,20 @@ strong.tablenumber { font-size:110%; }
 
 <style>
 .detail-container { background-color: #e0f0ff; }
+
+div#chartjs-tooltip, div#chartjs-tooltip div {
+  padding:0;
+  margin:0;
+  border: none;
+  background-color:rgba(255,255,255,0.3);
+  color: #202020;
+}
+
+div#chartjs-tooltip b {
+  margin-right:5px;
+  margin-left:2px;
+  font-weight:normal;
+}
+
 </style>
 
