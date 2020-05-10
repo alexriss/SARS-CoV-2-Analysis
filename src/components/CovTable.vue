@@ -243,23 +243,22 @@
         Notes:
         <ul>
           <li>
-            - The relative changes in the confirmed cases can be related to a doubling rate, i.e.
-            a doubling every 3 days for a daily increase of 26%.
-          </li>
-          <li>
-            - The doubling time is displayed in the tooltip in the sparklines next to the relative increase, i.e. "26% / 3d".
-          </li>
-          <li>
             - <strong>CFR*</strong> is very crudely calculated by dividing the number of deceased persons by the number of confirmed cases.
           </li>
           <li>
-            - For the determination of the reproductive number R, the method of the
-             <a href="https://stochastik-tu-ilmenau.github.io/COVID-19/">AG Stochastik, Technische Universität Ilmenau</a> is used.
+            - For the determination of the <strong>effective reproductive number R</strong>, the method of the
+             <a href="https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/">AGES Austria</a> is used.
+             It is similar to the method used in the <a href="https://cran.r-project.org/package=EpiEstim">R-Package EpiEstim</a> and described in <a href="https://doi.org/10.1093/aje/kwt133">Am J Epidemiol 178, 1505–1512 (2013)</a>.
           </li>
           <li>
-             - For the estimation of R, a daily infectivity profile of
-             <span v-for="item in infectivity" :key='item.index'> {{ item | numeral('0.0%') }} </span>
-              is assumed.
+             - In particular, it was assumed that the serial intervall follows a Gamma-distrubution with mean of 4.46 and standard deviation of 2.63, as determined by <a href="https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/">AGES Austria</a>.
+          </li>
+          <li>
+            - The <strong>relative</strong> changes in the confirmed cases can be related to a doubling rate, i.e.
+            a doubling every 3 days for a daily increase of 26%.
+          </li>
+          <li>
+            - The <strong>doubling time</strong> is displayed in the tooltip in the sparklines next to the relative increase, i.e. "26% / 3d".
           </li>
           <li>
             - Please double check al computed values and graphs. This is a weekend-project for me, thus I only do very limited testing.
@@ -310,8 +309,24 @@
 
     let provincesAlwaysShow = ["Hong Kong", "Macau"]
 
-    // infectivity profile, according to: https://stochastik-tu-ilmenau.github.io/COVID-19/
-    let infectivity = [0., 0., 0.05555556, 0.11111111, 0.16666667, 0.16666667, 0.16666667, 0.13333333, 0.1, 0.06666667, 0.03333333, 0.]
+    // gamma distribution with mean=4.46 and stddev=2.63. 
+    // Thus gamma parameters a=4.46^2/2.63^2 and b=4.46/2.63^2
+    // Or: k=4.46**2/2.63**2 and theta=2.63**2/4.46
+    // gamma.pdf then in python:  scipy.stats.gamma.pdf(x, a, scale=theta)
+    let infectivity = [0.00000000e+00, 8.30441526e-02, 1.59936726e-01, 1.79567462e-01,
+       1.61642418e-01, 1.28916005e-01, 9.52363568e-02, 6.67343371e-02,
+       4.49881839e-02, 2.94454503e-02, 1.88285968e-02, 1.18149047e-02,
+       7.29931124e-03, 4.45098908e-03, 2.68408616e-03, 1.60313232e-03,
+       9.49540639e-04, 5.58302141e-04, 3.26137914e-04, 1.89415297e-04,
+       1.09438224e-04, 6.29337850e-05, 3.60370553e-05, 2.05555850e-05,
+       1.16833920e-05, 6.61900196e-06, 3.73862227e-06, 2.10583662e-06,
+       1.18309469e-06, 6.63093211e-07];
+    let tau = 7;  // average over n days
+
+    // slice and normalize infectivity according to tau days
+    infectivity = infectivity.slice(0,tau+1);
+    let infectivitySum = infectivity.reduce((a, b) => a + b, 0);
+    infectivity = infectivity.map(function(item){ return item/infectivitySum });
 
     let urlPre = "";
     if (window.location.href.indexOf("github.io") >= 0) {
@@ -387,30 +402,6 @@
       }
     }
 
-    // 1d convolution, see https://gist.github.com/jdpigeon/1de0b43eed7ae7e4080818cad53be200
-    function convolve(vec1, vec2) {
-      if (vec1.length === 0 || vec2.length === 0) {
-        throw new Error("Vectors can not be empty!");
-      }
-      const volume = vec1;
-      const kernel = vec2;
-      let displacement = 0;
-      const convVec = [];
-
-      for (let i = 0; i < volume.length; i++) {
-        for (let j = 0; j < kernel.length; j++) {
-          if (displacement + j !== convVec.length) {
-            convVec[displacement + j] =
-              convVec[displacement + j] + volume[i] * kernel[j];
-          } else {
-            convVec.push(volume[i] * kernel[j]);
-          }
-        }
-        displacement++;
-      }
-      return convVec;
-    }
-
     // returns row
     function makerow(country, cases, deaths, isprovince=false) {
       let casesChange = {};
@@ -474,16 +465,23 @@
       // reproduction number
       let casesdailyArr = Object.values(casesdaily);
       let casesdailyKeys = Object.keys(casesdaily);
-      let sumtauwI = convolve(casesdailyArr, infectivity);
-      sumtauwI = sumtauwI.slice(infectivity.length-1, casesdailyArr.length);
-      sumtauwI = Array(casesdailyArr.length-sumtauwI.length).fill(NaN).concat(sumtauwI);  // prepend with NaNs to give equal length to cases
-      for (let i=0; i<casesdailyKeys.length; i++) {
-        if (sumtauwI[i] < 0.1 || casesdailyArr[i] < 0) {  // dont calculate reproduction number if there are too few cases
-          repronum[dates[i]] = NaN;
+      for (let t=0; t<tau-1; t++) {
+        repronum[casesdailyKeys[t]] = NaN;
+      }
+      for (let t=tau-1; t<casesdailyKeys.length; t++) {
+        let sum_yi = 0;
+        let sum_di = 0;
+        for (let i=t-tau+1; i<=t; i++) {
+          sum_yi += casesdailyArr[i];
+
+          let sum_yw = 0;
+          for (let s=1; s<=tau; s++) {
+            sum_yw += casesdailyArr[i-s] * infectivity[s];
+          }
+          sum_di += sum_yw;
         }
-        else {
-          repronum[casesdailyKeys[i]] = casesdailyArr[i] / sumtauwI[i];
-        }
+        
+        repronum[casesdailyKeys[t]] = (1 + sum_yi) / (1/5 + sum_di);
       }
 
       let sparklinesdataTotal = {
@@ -514,16 +512,12 @@
         ]
       }
 
-      let sparklinescfrdataentries = [];
-      for (let i=dates.length-daysCFR; i<dates.length; i++) {  // 14 days of sparklinescfr
-        sparklinescfrdataentries.push(deceasedrelative[dates[i]]);
-      }
       let sparklinescfrdata = {
         labels: dates.slice(dates.length-daysCFR),
         datasets: [
           {
             label: country,
-            data: sparklinescfrdataentries
+            data: Object.values(deceasedrelative).slice(Object.values(deceasedrelative).length-daysCFR)
           }
         ]
       }
@@ -534,6 +528,8 @@
 
         'casesChange': casesChange, 'deathsChange': deathsChange,
         'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
+        'casesChangeLast14':casesChangeLast14, 'deathsChangeLast14':deathsChangeLast14,
+        'repronum': repronum,
         
         'casesChangeLatest': casesChange[latest], 'casesChangeLatest3': arrMean(casesChange, 3), 'casesChangeLatest8': arrMean(casesChange, 8), 
         'casesChangeLast14Latest': casesChangeLast14[latest], 'casesChangeLast14Latest3': arrMean(casesChangeLast14, 3), 'casesChangeLast14Latest8': arrMean(casesChangeLast14, 8),
@@ -739,16 +735,16 @@
                 infectivity,
                 columnsTemplate: {
                     casesChangeLatest: { title: 'Confirmed Increase', visible: false, tooltip: 'Increase relative to all confirmed cases' },
-                    casesChangeLast14Latest: { title: 'Week/week increase', visible: true, tooltip: 'Increase over last 7 days relative to the 7 days before'},
-                    repronumLatest: { title: 'R', visible: false, tooltip: 'Effective reproduction number'},
+                    casesChangeLast14Latest: { title: 'Week/week increase', visible: false, tooltip: 'Increase over last 7 days relative to the 7 days before'},
+                    repronumLatest: { title: 'R', visible: true, tooltip: 'Effective reproduction number'},
                     deathsLatest: { title: 'Deceased', visible: true, tooltip: 'Total number of confirmed deceased cases'},
                     deathsChangeLatest: { title: 'Deceased Increase', visible: true, tooltip: 'Increased of confirmed deceased cases'},
                     deceasedrelativeLatest: { title: 'CFR*', visible: true, tooltip: 'Ratio between all confirmed deceased cases to all confirmed cases'},
                 },
                 columnsGraphsTemplate: {
                     casesChangeLatest: { title: 'Confirmed Increase', visible: false, show: true, tooltip: 'Plot of daily increase relative to confirmed cases over time' },
-                    casesChangeLast14Latest: { title: 'Week/week increase', visible: true, show: true, tooltip: 'Plot of increase over last 7 days relative to the 7 days before' },
-                    repronumLatest: { title: 'R', visible: false, show: true, tooltip: 'Plot of the effective reproduction number over time'},
+                    casesChangeLast14Latest: { title: 'Week/week increase', visible: false, show: true, tooltip: 'Plot of increase over last 7 days relative to the 7 days before' },
+                    repronumLatest: { title: 'R', visible: true, show: true, tooltip: 'Plot of the effective reproduction number over time'},
                     deceasedrelativeLatest: { title: 'CFR*', visible: true, show: true, tooltip: 'Plot of the ratio between all confirmed deceased cases to all confirmed cases over time'},
                 },
                 sparklineStyles: {

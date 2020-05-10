@@ -32,12 +32,11 @@ Of course! Even rather alpha. It is a weekend project and I just work on this in
 
 ## Data source
 
-The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ. For the calculation of the reproduction source I followed the method of [AG Stochastik, Technische Universität Ilmenau](https://stochastik-tu-ilmenau.github.io/COVID-19/).
+The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ. For the calculation of the reproduction source I followed the method of [AGES Austria](https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/), which is similar to the method presented in the [R-Package EpiEstim](https://cran.r-project.org/package=EpiEstim) and described in [Am J Epidemiol 178, 1505–1512 (2013)](https://doi.org/10.1093/aje/kwt133).
 
 ## Todo
 
 * parse US states
-* improve R estimation
 * improve mobile experience
 * probably: use ECharts for sparklines (instead of charts.js)
 * improve tooltip position for sparklines, probably static position will be best

@@ -5,8 +5,8 @@
 </template>
 
 <script>
-const seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed increase', 'deceased increase'];
-const formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%'];
+const seriesNames = ['confirmed total', 'deceased total', 'CFR*', 'confirmed daily', 'deceased daily', 'confirmed w/w increase', 'deceased w/w increase', 'R'];
+const formatStrs = ['0,0', '0,0', '0.0%', '0,0', '0,0', '0.0%', '0.0%', '0.00'];
 const extraSpaceAfter = [2, 4];  // add extra spacer in the tooltip after those indices of seriesNames
 const runningAverage = 11;  // running average over this many points for daily cases chart
 
@@ -68,7 +68,10 @@ function splitData(rowdata) {
   let deathsdaily = [0];
   let casesChange = [0];
   let deathsChange = [0];
-  let deceasedrelative = []
+  let deceasedrelative = [];
+  let casesChangeLast14 = [];
+  let deathsChangeLast14 = [];
+  let repronum = [];
 
   for (let i = 0; i < dates.length; i++) {
     if (rowdata["cases"][dates[i]] > 0) {  // we dont want zeros for log plots
@@ -88,6 +91,9 @@ function splitData(rowdata) {
       deathsChange.push(rowdata["deathsChange"][dates[i]]);
     }
     deceasedrelative.push(rowdata["deceasedrelative"][dates[i]]);
+    casesChangeLast14.push(rowdata["casesChangeLast14"][dates[i]]);
+    deathsChangeLast14.push(rowdata["deathsChangeLast14"][dates[i]]);
+    repronum.push(rowdata["repronum"][dates[i]]);
   }
 
   return {
@@ -101,6 +107,9 @@ function splitData(rowdata) {
     casesChange: casesChange,
     deathsChange: deathsChange,
     deceasedrelative: deceasedrelative,
+    casesChangeLast14: casesChangeLast14,
+    deathsChangeLast14: deathsChangeLast14,
+    repronum: repronum,
   };
 }
 
@@ -302,6 +311,7 @@ export default {
                         }
                     },
                     axisLine: { lineStyle: { color: '#8d0101' } },
+                    splitLine: { show: false },
                 },
                 {
                     gridIndex: 1,
@@ -331,20 +341,38 @@ export default {
                         }
                     },
                     axisLine: { lineStyle: { color: '#8d0101' } },
+                    splitLine: { show: false },
                 },
                 {
                     gridIndex: 2,
-                    name: 'increase',
+                    name: 'R',
+                    show: true,
+                    nameLocation: 'center',
+                    nameGap: 37,
+                    type: 'value',
+                    min: 0,
+                    max: function (value) { return Math.min(value.max, 3); },
+                    axisLabel: {
+                        formatter: function (val) {
+                            return numeral(val).format('0.0');
+                        }
+                    },
+                    axisLine: { lineStyle: { color: '#01597d' } },
+                },
+                {
+                    gridIndex: 2,
+                    name: 'w/w increase',
                     nameLocation: 'center',
                     nameGap: 40,
                     type: 'value',
-                    min: 0,
-                    max: function (value) { return Math.min(value.max, 0.5); },
+                    min: function (value) { return Math.max(value.min, -1); },
+                    max: function (value) { return Math.min(value.max, 1.5); },
                     axisLabel: {
                         formatter: function (val) {
                             return numeral(val).format('0%');
                         }
-                    }
+                    },
+                    splitLine: { show: false },
                 },
                 {
                     gridIndex: 0,
@@ -357,10 +385,10 @@ export default {
                     max: function (value) { return Math.max(value.max, 0.1); },
                     axisLabel: {
                         formatter: function (val) {
-                            return numeral(val).format('0.0%');
+                            return numeral(val).format('0%');
                         }
                     }
-                }
+                },
             ],
             series: [
                 {
@@ -405,7 +433,7 @@ export default {
                     sampling: 'average',  // average if points are smaller than display size, for better performance
                     areaStyle: { opacity: 0.2 },
                     xAxisIndex: 0,
-                    yAxisIndex: 5,
+                    yAxisIndex: 6,
                     symbolSize: 0,
                     hoverAnimation: true,
                     data: splitChartData['deceasedrelative'],
@@ -474,7 +502,7 @@ export default {
                     data: splitChartData['deathsdaily_avg'],
                 },
                 {
-                    name: 'deceased increase',
+                    name: 'deceased w/w increase',
                     type: 'line',
                     lineStyle: {
                         opacity: 0.2,
@@ -483,15 +511,15 @@ export default {
                     color: '#9d3131',
                     smooth: true,
                     sampling: 'average',  // average if points are smaller than display size, for better performance
-                    areaStyle: { opacity: 0.69 },
+                    areaStyle: { opacity: 0.08 },
                     xAxisIndex: 2,
-                    yAxisIndex: 4,
+                    yAxisIndex: 5,
                     symbolSize: 0,
                     hoverAnimation: true,
-                    data: splitChartData['deathsChange'],
+                    data: splitChartData['deathsChangeLast14'],
                 },
                 {
-                    name: 'confirmed increase',
+                    name: 'confirmed w/w increase',
                     type: 'line',
                     lineStyle: {
                         opacity: 0.2,
@@ -500,12 +528,28 @@ export default {
                     color: '#3179bd',
                     smooth: true,
                     sampling: 'average',  // average if points are smaller than display size, for better performance
-                    areaStyle: { opacity:0.69 },
+                    areaStyle: { opacity:0.25 },
                     xAxisIndex: 2,
-                    yAxisIndex: 4,
+                    yAxisIndex: 5,
                     symbolSize: 0,
                     hoverAnimation: true,
-                    data: splitChartData['casesChange'],
+                    data: splitChartData['casesChangeLast14'],
+                },
+                {
+                    name: 'R',
+                    type: 'line',
+                    lineStyle: {
+                        opacity: 1,
+                        type: 'solid',
+                        width: 3
+                    },
+                    color: '#11598d',
+                    sampling: 'average',  // average if points are smaller than display size, for better performance
+                    xAxisIndex: 2,
+                    yAxisIndex: 4,
+                    symbolSize: 1,
+                    hoverAnimation: true,
+                    data: splitChartData['repronum'],
                 },
             ]
         }
