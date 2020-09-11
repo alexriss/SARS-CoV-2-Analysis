@@ -12,7 +12,6 @@ todo:
       https://github.com/buefy/buefy/issues/596
       https://stackoverflow.com/questions/48844202/toggle-detailed-row-in-buefy-table/52165074
       https://stackoverflow.com/questions/43728332/vue-chart-js-chart-is-not-updating-when-data-is-changing
-  - variable n (for charts that are scaled by multiplication by n), determine n such that we have roughly 50% height of deceased cases, but use base 5 or 10
   - local storage for settings: https://vuejs.org/v2/cookbook/client-side-storage.html
   - add horizontal gridlines at certain positions for doublings
           'value3day': Math.pow(2,1/3)-1,
@@ -37,3 +36,7 @@ todo:
     - https://zenodo.org/record/2540217
     - https://www.ages.at/download/0/0/068cb5fb9f2256d267e1a3dc8d464623760fcc30/fileadmin/AGES2015/Wissen-Aktuell/COVID19/Sch%C3%A4tzung_des_seriellen_Intervalles_von_COVID19_2020-04-08.pdf
     - https://cran.r-project.org/web/packages/EpiEstim/index.html
+
+    - tooltip position and vertical line:
+        https://jsfiddle.net/vz68h5Lf/2/
+        https://vue-chartjs.org/guide/#custom-new-charts
