@@ -32,7 +32,7 @@ Of course! Even rather alpha. It is a weekend project and I just work on this in
 
 ## Data source
 
-The data is automatically downloaded from [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and parsed in-situ. For the calculation of the reproduction source I followed the method of [AGES Austria](https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/), which is similar to the method presented in the [R-Package EpiEstim](https://cran.r-project.org/package=EpiEstim) and described in [Am J Epidemiol 178, 1505–1512 (2013)](https://doi.org/10.1093/aje/kwt133).
+The data is from the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) and [Johns Hopkins University vaccine data](https://github.com/govex/COVID-19/tree/master/data_tables/vaccine_data/global_data) and [UNdata](http://data.un.org/). For the calculation of the reproduction source I followed the method of [AGES Austria](https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/), which is similar to the method presented in the [R-Package EpiEstim](https://cran.r-project.org/package=EpiEstim) and described in [Am J Epidemiol 178, 1505–1512 (2013)](https://doi.org/10.1093/aje/kwt133).
 
 ## Todo
 

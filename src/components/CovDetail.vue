@@ -13,7 +13,7 @@ const runningAverage = 11;  // running average over this many points for daily c
 import numeral from 'numeral'
 numeral.locale('en');
 import ECharts from "vue-echarts";
-import 'echarts/lib/langEN';
+// import 'echarts/lib/langEN';
 import "echarts/lib/chart/line";
 import "echarts/lib/chart/bar";
 import "echarts/lib/component/title";

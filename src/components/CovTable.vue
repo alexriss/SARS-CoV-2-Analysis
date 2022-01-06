@@ -93,7 +93,7 @@
                     </a>
                 </b-table-column>
 
-                <b-table-column field="casesLatest" label="Confirmed" numeric sortable>
+                <b-table-column field="casesLatest" label="Confirmed" :visible="columnsTemplate.casesLatest.visible" numeric sortable>
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
                         <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of confirmed cases.'>
                             Confirmed
@@ -103,6 +103,17 @@
                     <br />
                     <span class="minorcolor">{{ props.row.casesdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
+
+                <b-table-column field="casesLatestPerPopulation" label="Confirmed %" :visible="columnsTemplate.casesLatestPerPopulation.visible" numeric sortable>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of confirmed cases.'>
+                            Confirmed <br /> (% of population)
+                        </b-tooltip>
+                    </template> 
+                    <strong class='tablenumber'>{{ props.row.casesLatestPerPopulation | numeral('0.0%') }}</strong>
+                    <br />
+                    <span class="minorcolor">{{ props.row.casesdailyLatestPerPopulation | numeral('+0.00%') }} </span>
+                </b-table-column>                   
 
                 <b-table-column field="casesChangeLatest" label="Increase" :visible="columnsTemplate.casesChangeLatest.visible" numeric sortable>
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
@@ -115,7 +126,7 @@
                     <br />3d avg: {{ props.row.casesChangeLatest3 | numeral('+0.0%')}}
                     <br />8d avg: {{ props.row.casesChangeLatest8 | numeral('+0.0%')}}
                     </span>
-                </b-table-column>
+                </b-table-column>        
 
                 <b-table-column field="casesChangeLatest8" :label="'Increase over ' + daysRelChange + ' days'" :visible="columnsGraphsTemplate.casesChangeLatest.visible" numeric sortable centered>
                     <template slot="header"> <!--  slot-scope="{ column }"> -->
@@ -124,7 +135,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinesData' :options='sparklineOptions' :styles='sparklineStyles' />
+                    <sparkline-small :chart-data='props.row.sparklinesData' :options='sparklineOptions' :styles='sparklineStyles' />
                   </div>
                 </b-table-column>
                 
@@ -148,7 +159,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinesLast14Data' :options='sparklineLast14Options' :plugins='sparklineLast14Plugins' :styles='sparklineStyles' />
+                    <sparkline-small :chart-data='props.row.sparklinesLast14Data' :options='sparklineLast14Options' :plugins='sparklineLast14Plugins' :styles='sparklineStyles' />
                   </div>
                 </b-table-column>
                 
@@ -172,7 +183,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinesRepronumData' :options='sparklineRepronumOptions' :plugins='sparklineRepronumPlugins' :styles='sparklineStyles' />
+                    <sparkline-small :chart-data='props.row.sparklinesRepronumData' :options='sparklineRepronumOptions' :plugins='sparklineRepronumPlugins' :styles='sparklineStyles' />
                   </div>
                 </b-table-column>
 
@@ -220,7 +231,7 @@
                         </b-tooltip>
                     </template> 
                   <div style='width:200px;height:65px;margin:auto;'>
-                    <sparkline :chart-data='props.row.sparklinesCfrData' :options='sparklineCfrOptions' :styles='sparklineStyles' />
+                    <sparkline-small :chart-data='props.row.sparklinesCfrData' :options='sparklineCfrOptions' :styles='sparklineStyles' />
                   </div>
 
                 </b-table-column>
@@ -251,7 +262,7 @@
              It is similar to the method used in the <a href="https://cran.r-project.org/package=EpiEstim">R-Package EpiEstim</a> and described in <a href="https://doi.org/10.1093/aje/kwt133">Am J Epidemiol 178, 1505–1512 (2013)</a>.
           </li>
           <li>
-             - In particular, it was assumed that the serial intervall follows a Gamma-distrubution with mean of 4.46 and standard deviation of 2.63, as determined by <a href="https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/">AGES Austria</a>.
+             - In particular, it was assumed that the serial intervall follows a Gamma-distrubution with mean of 3.37 and standard deviation of 1.83, as determined by <a href="https://www.ages.at/en/wissen-aktuell/publikationen/epidemiologische-parameter-des-covid19-ausbruchs-oesterreich-2020/">AGES Austria</a>.
           </li>
           <li>
             - The <strong>relative</strong> changes in the confirmed cases can be related to a doubling rate, i.e.
@@ -270,7 +281,9 @@
         
         <br />
         <p class="minor">
-        Data Source: <a href="https://github.com/CSSEGISandData/COVID-19" target="_blank">Johns Hopkins University</a>
+        Data Source: <a href="https://github.com/CSSEGISandData/COVID-19" target="_blank">COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University</a>
+        and <a href="https://github.com/govex/COVID-19/tree/master/data_tables/vaccine_data/global_data" target="_blank">Johns Hopkins vaccine data</a>
+        and <a href="http://data.un.org/" target="_blank">UNdata</a>
         <br />
         Data included until: {{ latest }}
         </p>
@@ -307,20 +320,22 @@
     let csvDeceased = "time_series_covid19_deaths_global.csv";
     let githubJH = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/";
 
-    let provincesAlwaysShow = ["Hong Kong", "Macau"]
+    // let csvVaccinations = "time_series_covid19_vaccine_global.csv";  // TODO: parse vaccinations
+    // let csvVaccinationsAdmin = "time_series_covid19_vaccine_doses_admin_global.csv";  // we get the population data from this file
+    // let githubJH2 = "https://raw.githubusercontent.com/govex/COVID-19/master/data_tables/vaccine_data/global_data/";
 
-    // gamma distribution with mean=4.46 and stddev=2.63. 
-    // Thus gamma parameters a=4.46^2/2.63^2 and b=4.46/2.63^2
-    // Or: k=4.46**2/2.63**2 and theta=2.63**2/4.46
-    // gamma.pdf then in python:  scipy.stats.gamma.pdf(x, a, scale=theta)
-    let infectivity = [0.00000000e+00, 8.30441526e-02, 1.59936726e-01, 1.79567462e-01,
-       1.61642418e-01, 1.28916005e-01, 9.52363568e-02, 6.67343371e-02,
-       4.49881839e-02, 2.94454503e-02, 1.88285968e-02, 1.18149047e-02,
-       7.29931124e-03, 4.45098908e-03, 2.68408616e-03, 1.60313232e-03,
-       9.49540639e-04, 5.58302141e-04, 3.26137914e-04, 1.89415297e-04,
-       1.09438224e-04, 6.29337850e-05, 3.60370553e-05, 2.05555850e-05,
-       1.16833920e-05, 6.61900196e-06, 3.73862227e-06, 2.10583662e-06,
-       1.18309469e-06, 6.63093211e-07];
+    let provincesAlwaysShow = ["Hong Kong", "Macau", "Gibraltar"]
+
+    // gamma distribution with mean=3.37 and stddev=1.83. 
+    // Thus gamma parameters a=3.37^2/1.83^2 and b=3.37/1.83^2
+    // Or in julia: a=3.37^2/1.83^2 and theta=3.37^2/1.83
+    // pdf.(Gamma(a, theta), 0:20) from Distributions.js
+    let infectivity = [ 0.0, 0.08304415257797272, 0.15993672609161652, 0.1795674615700756,
+            0.16164241814294922, 0.12891600531299402, 0.0952363567906094, 0.06673433711725346,
+            0.04498818390522225, 0.029445450348710947, 0.018828596809961236, 0.011814904666702543,
+            0.0072993112428085824, 0.004450989078487579, 0.0026840861611491648, 0.001603132317888464,
+            0.0009495406392606913, 0.0005583021406280403, 0.0003261379138661806, 0.00018941529737112345,
+            0.00010943822402030254];
     let tau = 7;  // average over n days
 
     // slice and normalize infectivity according to tau days
@@ -332,22 +347,27 @@
     if (window.location.href.indexOf("github.io") >= 0) {
       urlPre = githubJH;
     }
-
-    // let sparklineGradient = ctx.createLinearGradient(0, 0, 0, 400);
-    // sparklineGradient.addColorStop(0, 'rgba(250,174,50,1)');   
-    // sparklineGradient.addColorStop(1, 'rgba(250,174,50,0)')
-
     console.log("loading "+ urlPre + csvConfirmed);
     let csvC = readTextFile(urlPre + csvConfirmed);
     console.log("loading "+ urlPre + csvDeceased);
     let csvD = readTextFile(urlPre + csvDeceased);
 
+    // let urlPre2 = "";
+    // if (window.location.href.indexOf("github.io") >= 0) {
+    //   urlPre2 = githubJH2;
+    // }
+    // console.log("loading "+ urlPre2 + csvVaccinationsAdmin);
+    // let csvP = readTextFile(urlPre2 + csvVaccinationsAdmin);
+    
+    let population = JSON.parse( readTextFile("population.json", false));
+    window.population = population;
+
     import numeral from 'numeral'
-    import Sparkline from '@/components/Sparkline.vue'
+    import SparklineSmall from '@/components/SparklineSmall.vue'
     import CovDetail from '@/components/CovDetail.vue'
 
     // read csv files
-    function readTextFile(file)
+    function readTextFile(file, cleanup=true)
     {
       let rawFile = new XMLHttpRequest();
       let allText = '';
@@ -360,13 +380,17 @@
         }
       }
       rawFile.send(null);
-      // replace Korea, South
-      allText = allText.replace('"Korea, South"', 'South Korea');
-      
-      // replaces commas within quotes
-      allText = allText.replace(/"[^"]+"/g, function (match) {
-        return match.replace(/,/g, ' ');
-      });
+
+      if (cleanup) {
+        // replace Korea, South
+        allText = allText.replace('"Korea, South"', 'South Korea');
+        
+        // replaces commas within quotes
+        allText = allText.replace(/"[^"]+"/g, function (match) {
+          return match.replace(/,/g, ' ');
+        });
+      }
+
       return allText;
     }
 
@@ -414,6 +438,18 @@
       let casesLast14 = 0;
       let deathsLast14 = 0;
       let repronum = {};
+      let thisPopulation = 0;
+
+      if (!(country in population)) {
+        let country2 = country.replace(/.*\s-\s/g, "");  // remove country name from province name
+        if (!(country2 in population)) {
+          console.log("No population for ", country);
+        } else {
+          thisPopulation = population[country] * 1e6;
+        }
+      } else {
+        thisPopulation = population[country] * 1e6;
+      }
 
       for(let i=0;i<dates.length-1;i++) {
         // daily cases
@@ -522,9 +558,23 @@
         ]
       }
 
+      let casesLatestPerPopulation = 0;
+      let casesdailyLatestPerPopulation = 0;
+      let deathsLatestPerPopulation = 0;
+      let deathsdailyLatestPerPopulation = 0;
+      if (thisPopulation > 0) {
+        casesLatestPerPopulation = cases[latest] / thisPopulation;
+        casesdailyLatestPerPopulation = casesdaily[latest] / thisPopulation;
+        deathsLatestPerPopulation = deaths[latest] / thisPopulation;
+        deathsdailyLatestPerPopulation = deathsdaily[latest] / thisPopulation;
+      }  
+
       return {
         'dates': dates, 'country': country, 'isprovince': isprovince,
         'cases': cases, 'deaths': deaths, 'casesLatest': cases[latest], 'deathsLatest': deaths[latest],
+
+        'casesLatestPerPopulation': casesLatestPerPopulation, 'deathsLatestPerPopulation': deathsLatestPerPopulation,
+        'casesdailyLatestPerPopulation': casesdailyLatestPerPopulation, 'deathsdailyLatestPerPopulation': deathsdailyLatestPerPopulation,
 
         'casesChange': casesChange, 'deathsChange': deathsChange,
         'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
@@ -609,7 +659,7 @@
 
     let arrC = csvC.split("\n");
     let arrD = csvD.split("\n");
-
+   
     let headerC = arrC.shift().split(','); 
     let headerD = arrD.shift().split(','); 
 
@@ -712,7 +762,7 @@
 
     export default {
         components: {
-          Sparkline,
+          SparklineSmall,
           CovDetail
         },
         data() {
@@ -734,6 +784,8 @@
                 daysCFR,
                 infectivity,
                 columnsTemplate: {
+                    casesLatest: { title: 'Confirmed', visible: true, tooltip: 'Confirmed cases' },
+                    casesLatestPerPopulation: { title: 'Confirmed %', visible: false, tooltip: 'Confirmed (% of population)' },
                     casesChangeLatest: { title: 'Confirmed Increase', visible: false, tooltip: 'Increase relative to all confirmed cases' },
                     casesChangeLast14Latest: { title: 'Week/week increase', visible: false, tooltip: 'Increase over last 7 days relative to the 7 days before'},
                     repronumLatest: { title: 'R', visible: true, tooltip: 'Effective reproduction number'},
