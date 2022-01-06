@@ -106,7 +106,7 @@
 
                 <b-table-column field="casesLatestPerPopulation" label="Confirmed %" :visible="columnsTemplate.casesLatestPerPopulation.visible" numeric sortable>
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
-                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of confirmed cases.'>
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of confirmed cases (% of population).'>
                             Confirmed <br /> (% of population)
                         </b-tooltip>
                     </template> 
@@ -187,6 +187,26 @@
                   </div>
                 </b-table-column>
 
+                <b-table-column field="weekIncidenceLatest" label="7-day indicence" :visible="columnsTemplate.weekIncidenceLatest.visible" numeric sortable>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='7-day indicence per 100,000 population'>
+                           7-day<br />indicence
+                        </b-tooltip>
+                    </template> 
+                    <strong class="tablenumber">{{ props.row.weekIncidenceLatest | numeral('0,0')}}</strong>
+                </b-table-column>                
+
+                <b-table-column field="weekIncidenceLatest" :label="'R over ' + daysRelChange + ' days'" :visible="columnsGraphsTemplate.weekIncidenceLatest.visible" numeric sortable centered>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" :label="'' + daysRelChange + '-day plot of the 7-day incidence per 100,000 population.'">
+                            7-day indicence<br />over {{ daysRelChange }} days
+                        </b-tooltip>
+                    </template> 
+                  <div style='width:200px;height:65px;margin:auto;'>
+                    <sparkline-small :chart-data='props.row.sparklinesWeekIncidenceData' :options='sparklineWeekIncidenceOptions' :plugins='sparklineWeekIncidencePlugins' :styles='sparklineStyles' />
+                  </div>
+                </b-table-column>
+
                 <b-table-column field="deathsLatest" label="Deceased" :visible="columnsTemplate.deathsLatest.visible" numeric sortable header-class='redhead' cell-class='redcell'>
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
                         <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of deceased people.'>
@@ -197,6 +217,17 @@
                     <br />
                     <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdaily[latest] | numeral('+0,0') }} </span>
                 </b-table-column>
+
+                <b-table-column field="deathsLatestPerPopulation" label="Deceased %" :visible="columnsTemplate.deathsLatestPerPopulation.visible" numeric sortable header-class='redhead' cell-class='redcell'>
+                    <template slot="header"> <!-- slot-scope="{ column }"> -->
+                        <b-tooltip :delay="tooltipDelay" multilined position="is-bottom" label='Total number and last-day increase of deceased people per million.'>
+                            Deceased per million
+                        </b-tooltip>
+                    </template> 
+                    <strong class='tablenumber'>{{ props.row.deathsLatestPerPopulationPM | numeral('0,0') }} p.m.</strong>
+                    <br />
+                    <span class="minorcolor red" style="opacity:0.9;"> {{ props.row.deathsdailyLatestPerPopulationPM | numeral('+0,0.0') }} p.m.</span>
+                </b-table-column>                
 
                 <b-table-column field="deathsChangeLatest" label="Increase " :visible="columnsTemplate.deathsChangeLatest.visible" numeric sortable header-class='redhead' cell-class='redcell' >
                     <template slot="header"> <!-- slot-scope="{ column }"> -->
@@ -438,6 +469,7 @@
       let casesLast14 = 0;
       let deathsLast14 = 0;
       let repronum = {};
+      let weekIncidence = {};
       let thisPopulation = 0;
 
       if (!(country in population)) {
@@ -496,6 +528,15 @@
         } else {
           deathsChangeLast14[dates[i+1]] = NaN;
         }
+
+        // 7 day indicence
+        if (i >= 7 && thisPopulation > 0) {
+          weekIncidence[item] = (cases[item] - cases[dates[i-7]]) / thisPopulation * 1e5;
+        } else if (i >= 7) {
+          weekIncidence[item] = -1.0; // to show that numbers are missing
+        } else {
+          weekIncidence[item] = NaN;
+        }
       });
 
       // reproduction number
@@ -548,6 +589,16 @@
         ]
       }
 
+      let sparklinesdataWeekIncidence = {
+        labels: dates.slice(dates.length-daysRelChange),
+        datasets: [
+          {
+            label: country,
+            data: Object.values(weekIncidence).slice(Object.values(weekIncidence).length-daysRelChange)
+          }
+        ]
+      
+      }
       let sparklinescfrdata = {
         labels: dates.slice(dates.length-daysCFR),
         datasets: [
@@ -558,15 +609,19 @@
         ]
       }
 
-      let casesLatestPerPopulation = 0;
-      let casesdailyLatestPerPopulation = 0;
-      let deathsLatestPerPopulation = 0;
-      let deathsdailyLatestPerPopulation = 0;
+      let casesLatestPerPopulation = -1;
+      let casesdailyLatestPerPopulation = -1;
+      let deathsLatestPerPopulation = -1;
+      let deathsdailyLatestPerPopulation = -1;
+      let deathsLatestPerPopulationPM = -1;
+      let deathsdailyLatestPerPopulationPM = -1;
       if (thisPopulation > 0) {
         casesLatestPerPopulation = cases[latest] / thisPopulation;
         casesdailyLatestPerPopulation = casesdaily[latest] / thisPopulation;
         deathsLatestPerPopulation = deaths[latest] / thisPopulation;
         deathsdailyLatestPerPopulation = deathsdaily[latest] / thisPopulation;
+        deathsLatestPerPopulationPM = deaths[latest] / thisPopulation * 1e6;
+        deathsdailyLatestPerPopulationPM = deathsdaily[latest] / thisPopulation * 1e6;
       }  
 
       return {
@@ -575,6 +630,9 @@
 
         'casesLatestPerPopulation': casesLatestPerPopulation, 'deathsLatestPerPopulation': deathsLatestPerPopulation,
         'casesdailyLatestPerPopulation': casesdailyLatestPerPopulation, 'deathsdailyLatestPerPopulation': deathsdailyLatestPerPopulation,
+        'deathsLatestPerPopulationPM': deathsLatestPerPopulationPM, 'deathsdailyLatestPerPopulationPM': deathsdailyLatestPerPopulationPM,
+
+        'weekIncidence': weekIncidence, 'weekIncidenceLatest': weekIncidence[latest],
 
         'casesChange': casesChange, 'deathsChange': deathsChange,
         'casesdaily': casesdaily, 'deathsdaily': deathsdaily,
@@ -591,7 +649,9 @@
         'deceasedrelativeLatest3': arrMean(deceasedrelative, 3),
         'deceasedrelativeLatest8': arrMean(deceasedrelative, 8), 
 
-        'sparklinesData': sparklinesdataTotal, 'sparklinesLast14Data': sparklinesdataLast14, 'sparklinesRepronumData': sparklinesdataRepronum, 'sparklinesCfrData': sparklinescfrdata, 
+        'sparklinesData': sparklinesdataTotal, 'sparklinesLast14Data': sparklinesdataLast14,
+        'sparklinesRepronumData': sparklinesdataRepronum, 'sparklinesCfrData': sparklinescfrdata, 
+        'sparklinesWeekIncidenceData': sparklinesdataWeekIncidence,
       }
     }
 
@@ -789,7 +849,9 @@
                     casesChangeLatest: { title: 'Confirmed Increase', visible: false, tooltip: 'Increase relative to all confirmed cases' },
                     casesChangeLast14Latest: { title: 'Week/week increase', visible: false, tooltip: 'Increase over last 7 days relative to the 7 days before'},
                     repronumLatest: { title: 'R', visible: true, tooltip: 'Effective reproduction number'},
+                    weekIncidenceLatest: { title: 'Incidence', visible: false, tooltip: '7-day Incidence per 100,000 population'},
                     deathsLatest: { title: 'Deceased', visible: true, tooltip: 'Total number of confirmed deceased cases'},
+                    deathsLatestPerPopulation: { title: 'Deceased %', visible: false, tooltip: 'Confirmed deceased cases (% of population)'},
                     deathsChangeLatest: { title: 'Deceased Increase', visible: true, tooltip: 'Increased of confirmed deceased cases'},
                     deceasedrelativeLatest: { title: 'CFR*', visible: true, tooltip: 'Ratio between all confirmed deceased cases to all confirmed cases'},
                 },
@@ -797,6 +859,7 @@
                     casesChangeLatest: { title: 'Confirmed Increase', visible: false, show: true, tooltip: 'Plot of daily increase relative to confirmed cases over time' },
                     casesChangeLast14Latest: { title: 'Week/week increase', visible: false, show: true, tooltip: 'Plot of increase over last 7 days relative to the 7 days before' },
                     repronumLatest: { title: 'R', visible: true, show: true, tooltip: 'Plot of the effective reproduction number over time'},
+                    weekIncidenceLatest: { title: 'Incidence', visible: false, show: true, tooltip: 'Plot of the 7-day Incidence per 100,000 over time'},
                     deceasedrelativeLatest: { title: 'CFR*', visible: true, show: true, tooltip: 'Plot of the ratio between all confirmed deceased cases to all confirmed cases over time'},
                 },
                 sparklineStyles: {
@@ -948,6 +1011,58 @@
                           let dataset = x.data.datasets[0];
                           let yScale = x.scales['y-axis-0'];
                           let yPos = yScale.getPixelForValue(1);
+                          let gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
+                          gradientFill.addColorStop(0, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height - 0.01, '#3179bd');
+                          gradientFill.addColorStop(yPos / c.height + 0.01, '#51a9cd');
+                          gradientFill.addColorStop(1, '#51a9cd');
+                          let model = x.data.datasets[0]._meta[Object.keys(dataset._meta)[0]].dataset._model;
+                          model.backgroundColor = gradientFill;
+                          model.borderColor = gradientFill;
+                        }
+                }],
+                sparklineWeekIncidenceOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    elements: {
+                      point: { radius: 0 },
+                      line: { 
+                        tension: 0,
+                        backgroundColor: '#3179bd',
+                        borderColor: '#3179bd',
+                        fill: true,
+                      }
+                    },
+                    tooltips: {
+                      enabled: false,  // we use the custom tooltip
+                      mode: 'x-axis',
+                      displayColors: false,
+                      custom: customTooltip,
+                      callbacks: { label: function(tooltipItem) {
+                        return numeral(tooltipItem.yLabel).format('0');
+                      }}
+                    },
+                    scales: {
+                      yAxes: [{
+                          display: false,
+                          ticks: {
+                            min: 0, max: 2000,
+                            // callback: function (value) { return numeral(value).format('0.0%') }
+                          }
+                      }],
+                      xAxes: [{
+                          display: false
+                      }]
+                    }
+                },
+                sparklineWeekIncidencePlugins: [{
+                        id: 'colorAboveBelow0',
+                        beforeDraw: function (x) {
+                          let c = x.chart;
+                          let dataset = x.data.datasets[0];
+                          let yScale = x.scales['y-axis-0'];
+                          let yPos = yScale.getPixelForValue(200);
                           let gradientFill = c.ctx.createLinearGradient(0, 0, 0, c.height);
                           gradientFill.addColorStop(0, '#3179bd');
                           gradientFill.addColorStop(yPos / c.height - 0.01, '#3179bd');

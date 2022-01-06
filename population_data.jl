@@ -30,6 +30,7 @@ population["Iran"] = population["Iran (Islamic Republic of)"]
 population["Bolivia"] = population["Bolivia (Plurin. State of)"]
 population["South Korea"] = population["Republic of Korea"]
 population["China - Hong Kong"] = population["China, Hong Kong SAR"]
+population["Cote d'Ivoire"] = population["C\xf4te d\x92Ivoire"]
 
 
 open("public/population.json", "w") do io
